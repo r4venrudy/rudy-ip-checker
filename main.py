@@ -136,6 +136,9 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         if not validate_ip(ip):
             await interaction.response.send_message("Invalid IP address.",ephemeral=True)
             return
+        if not ipaddress.ip_address(ip).is_global:
+            await interaction.response.send_message("That is a private or reserved address; public sources have no data for it.",ephemeral=True)
+            return
         await interaction.response.defer(ephemeral=False)
         info=[]
         s=await c.fetch_shodan_host_info(ip)
