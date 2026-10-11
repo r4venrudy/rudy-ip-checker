@@ -47,7 +47,10 @@ def load_config():
 
 def check_configurations(config):
     required=['TOKEN','SHODAN_KEY','VIRUSTOTAL_API_KEY']
-    return all(k in config for k in required)
+    missing=[k for k in required if not config.get(k)]
+    if missing:
+        logging.error("config.json is missing: %s",", ".join(missing))
+    return not missing
 
 def validate_ip(ip):
     try:
