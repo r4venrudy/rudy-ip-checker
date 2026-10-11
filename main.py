@@ -152,18 +152,28 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             return
         await interaction.response.defer(ephemeral=False)
         info=[]
-        s=await c.fetch_shodan_host_info(ip)
+        async def section(name,coro):
+            try:
+                return await coro
+            except Exception as e:
+                logging.warning("%s lookup failed for %s: %s",name,ip,e)
+                info.append(f"{name}: lookup failed")
+                return None
+        s=await section("Shodan",c.fetch_shodan_host_info(ip))
         if s:
             for d in s.get("data",[]):
                 info.append(f"Port {d.get('port')} - {clean_banner(d.get('data',''))}")
-        tor=await c.get_tor_exit_nodes()
-        info.append("Tor: Yes" if ip in tor else "Tor: No")
-        w=await c.fetch_whois_data(ip)
-        for k,v in w.items():
-            info.append(f"{k}: {v}")
-        vt=await c.get_virustotal_data(ip)
-        for k,v in vt.get("data",{}).get("attributes",{}).items():
-            info.append(f"{k}: {v}")
+        tor=await section("Tor",c.get_tor_exit_nodes())
+        if tor is not None:
+            info.append("Tor: Yes" if ip in tor else "Tor: No")
+        w=await section("WHOIS",c.fetch_whois_data(ip))
+        if w:
+            for k,v in w.items():
+                info.append(f"{k}: {v}")
+        vt=await section("VirusTotal",c.get_virustotal_data(ip))
+        if vt:
+            for k,v in vt.get("data",{}).get("attributes",{}).items():
+                info.append(f"{k}: {v}")
         await c.send_split_messages(interaction,"\n".join(info))
 
     c.run(token)
