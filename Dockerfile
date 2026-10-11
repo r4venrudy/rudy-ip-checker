@@ -9,4 +9,4 @@ COPY tests ./tests
 RUN python -m unittest discover -s tests -v && useradd --uid 10001 --create-home rudy
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 USER 10001:10001
-main.pyPOINT ["python", "/app/main.py"]
+ENTRYPOINT ["python", "/app/main.py"]
