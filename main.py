@@ -64,6 +64,25 @@ def clean_banner(banner):
     banner=re.sub(r'\s+;|\\n|\\r|\\t',' ',banner)
     return banner[:100]+"..." if len(banner)>100 else banner
 
+def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
+    chunks=[]
+    cur=""
+    for line in m.split("\n"):
+        # a single line longer than the limit is hard-wrapped
+        while len(line)>=limit:
+            if cur:
+                chunks.append(cur)
+                cur=""
+            chunks.append(line[:limit])
+            line=line[limit:]
+        if len(cur)+len(line)+1>limit:
+            chunks.append(cur)
+            cur=""
+        cur+=line+"\n"
+    if cur.strip():
+        chunks.append(cur)
+    return chunks or ["No data found."]
+
 class AClient(discord.Client):
     def __init__(self,shodan_key,virustotal_key):
         super().__init__(intents=discord.Intents.default())
@@ -108,15 +127,7 @@ class AClient(discord.Client):
             return await r.json()
 
     async def send_split_messages(self,i,m):
-        chunks=[]
-        cur=""
-        for line in m.split("\n"):
-            if len(cur)+len(line)>DISCORD_MESSAGE_LIMIT:
-                chunks.append(cur)
-                cur=""
-            cur+=line+"\n"
-        if cur:
-            chunks.append(cur)
+        chunks=split_message(m)
         if not i.response.is_done():
             await i.response.defer(ephemeral=False)
         await i.followup.send(chunks[0])
