@@ -132,7 +132,7 @@ class AClient(discord.Client):
             await i.response.defer(ephemeral=False)
         await i.followup.send(chunks[0])
         for c in chunks[1:]:
-            await i.channel.send(c)
+            await i.followup.send(c)
 
 def run_discord_bot(token,shodan_key,virustotal_key):
     c=AClient(shodan_key,virustotal_key)
