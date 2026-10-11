@@ -41,9 +41,10 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+from rudy_runtime.config import load_config as load_runtime_config
+
 def load_config():
-    with open('config.json','r') as f:
-        return json.load(f)
+    return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
 
 def check_configurations(config):
     required=['TOKEN','SHODAN_KEY','VIRUSTOTAL_API_KEY']
@@ -197,5 +198,8 @@ def run_discord_bot(token,shodan_key,virustotal_key):
 
 if __name__=="__main__":
     config=load_config()
+    if '--check-config' in sys.argv:
+        print('Configuration and dependencies ready')
+        raise SystemExit(0)
     if check_configurations(config):
         run_discord_bot(config["TOKEN"],config["SHODAN_KEY"],config["VIRUSTOTAL_API_KEY"])

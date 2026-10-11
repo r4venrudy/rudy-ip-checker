@@ -68,6 +68,22 @@ requirements.txt Legacy dependency list
 raven.png        Required startup asset
 ```
 
+## GitHub package
+
+A non-root container is published to GitHub Packages after build and offline configuration checks. Credentials are supplied at runtime and are excluded from the image.
+
+```sh
+cp .env.example .env
+# Fill in your own values in .env, keeping that file private.
+docker run --rm --env-file .env ghcr.io/r4venrudy/rudy-ip-checker:latest --check-config
+docker run --rm --env-file .env ghcr.io/r4venrudy/rudy-ip-checker:latest
+```
+
+`--check-config` validates installed dependencies, the bundled asset, and required settings without connecting to Discord. `RUDY_CONFIG` optionally points to a mounted JSON configuration file; environment variables take priority.
+
+Only public project files are packaged. Image tags are `latest` and `sha-<full commit SHA>`. Discord login and external API behavior still require your own account configuration; CI never uses live credentials.
+
+
 ## License
 
 [MIT](LICENSE). Preserve the attribution in the license file.
