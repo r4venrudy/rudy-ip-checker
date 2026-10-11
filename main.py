@@ -83,6 +83,17 @@ def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
         chunks.append(cur)
     return chunks or ["No data found."]
 
+def summarize_virustotal(vt):
+    a=vt.get("data",{}).get("attributes",{})
+    if not a:
+        return ["VirusTotal: no data"]
+    st=a.get("last_analysis_stats",{})
+    out=[f"VirusTotal: {st.get('malicious',0)} malicious, {st.get('suspicious',0)} suspicious, {st.get('harmless',0)} harmless"]
+    for key,label in (("reputation","Reputation"),("as_owner","AS owner"),("asn","ASN"),("country","Country"),("network","Network")):
+        if a.get(key) not in (None,""):
+            out.append(f"{label}: {a[key]}")
+    return out
+
 class AClient(discord.Client):
     def __init__(self,shodan_key,virustotal_key):
         super().__init__(intents=discord.Intents.default())
@@ -179,8 +190,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
                 info.append(f"{k}: {v}")
         vt=await section("VirusTotal",c.get_virustotal_data(ip))
         if vt:
-            for k,v in vt.get("data",{}).get("attributes",{}).items():
-                info.append(f"{k}: {v}")
+            info.extend(summarize_virustotal(vt))
         await c.send_split_messages(interaction,"\n".join(info))
 
     c.run(token)
