@@ -69,12 +69,17 @@ class AClient(discord.Client):
         super().__init__(intents=discord.Intents.default())
         self.shodan_key=shodan_key
         self.virustotal_key=virustotal_key
-        self.session=aiohttp.ClientSession()
+        self.session=None
         self.tree=discord.app_commands.CommandTree(self)
         self.rate_limiter=asyncio.Semaphore(RATE_LIMIT)
 
+    async def setup_hook(self):
+        # aiohttp sessions must be created inside the running event loop
+        self.session=aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20))
+
     async def close(self):
-        await self.session.close()
+        if self.session:
+            await self.session.close()
         executor.shutdown(wait=False)
         await super().close()
 
