@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="340" viewBox="0 0 1280 340" role="img" aria-label="Rudy IP Checker">
+<rect width="1280" height="340" rx="18" fill="#0a1018"/>
+<path d="M950 0v340M1010 0v340M1070 0v340M1130 0v340M1190 0v340M1250 0v340M900 50h380M900 110h380M900 170h380M900 230h380M900 290h380" stroke="#142333" stroke-width="1"/>
+<rect x="52" y="54" width="5" height="24" fill="#55e0b6"/>
+<text x="72" y="72" fill="#55e0b6" font-family="monospace" font-size="14" letter-spacing="3">R4VENRUDY / FIELD TOOLS</text>
+<text x="52" y="157" fill="#edf4fc" font-family="Arial, sans-serif" font-size="50" font-weight="700" letter-spacing="-1">Rudy IP Checker</text>
+<text x="54" y="204" fill="#97acc1" font-family="Arial, sans-serif" font-size="20">IP intelligence, directly in Discord.</text>
+<path d="M54 242h1172" stroke="#243448"/>
+<text x="54" y="284" fill="#55e0b6" font-family="monospace" font-size="13" letter-spacing="2">SHODAN  /  VIRUSTOTAL  /  WHOIS</text>
+<g transform="translate(1100 100)"><circle r="50" fill="none" stroke="#243448" stroke-width="2"/><circle r="32" fill="none" stroke="#55e0b6" stroke-width="2"/><path d="M-64 0h38M26 0h38M0-64v38M0 26v38" stroke="#55e0b6" stroke-width="2"/><circle r="6" fill="#55e0b6"/></g>
+</svg>

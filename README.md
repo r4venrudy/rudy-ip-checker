@@ -1,114 +1,77 @@
-##############################################
-#          IP Checker Discord Bot            #
-##############################################
+<p align="center"><img src="docs/banner.svg" alt="Rudy IP Checker — IP intelligence, directly in Discord." width="100%"></p>
 
-Description:
--------------
-This Discord bot provides comprehensive information about any IPv4 or IPv6 address.
-It integrates multiple data sources including Shodan, VirusTotal, WHOIS, Tor exit nodes, and geolocation services.
-The bot fetches open ports, service banners, historical Whois, VirusTotal analysis, and can even display screenshots for certain services.
-All results are neatly formatted for Discord messages and embeds.
+<p align="center">
+  <img src="https://img.shields.io/badge/Runtime-Python%20/%20Discord-55e0b6?style=flat-square&labelColor=101b28" alt="Python / Discord">
+  <img src="https://img.shields.io/badge/Docs-source_reviewed-55e0b6?style=flat-square&labelColor=101b28" alt="Documentation based on source review">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-55e0b6?style=flat-square&labelColor=101b28" alt="MIT license"></a>
+</p>
 
-Key Features:
--------------
-1. Shodan:
-   - Fetch open ports, services, operating system info, SSL info, and locations.
-   - Initiates scans if historical data is not enough.
+<p align="center"><strong>IP intelligence, directly in Discord.</strong></p>
 
-2. VirusTotal:
-   - Retrieve IP details, historical Whois data, URLs associated with the IP, community comments, and last analysis results.
+<p align="center"><a href="#overview">Overview</a> · <a href="#capabilities">Capabilities</a> · <a href="#quick-start">Quick start</a> · <a href="#implementation-notes">Implementation notes</a></p>
 
-3. WHOIS Lookup:
-   - Provides registration and ownership details for the IP address.
+---
 
-4. TOR Exit Node Check:
-   - Checks whether the IP is a TOR exit node.
+## Overview
 
-5. Geolocation:
-   - Returns city, region, country, timezone, postal code, and Google Maps link.
+A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal, WHOIS and the Tor Project exit-node list. IPv4 and IPv6 inputs are validated before the integrations run; long output is split into Discord messages.
 
-6. Screenshot Support:
-   - Displays screenshots of services if available in Shodan data.
+## Capabilities
 
-7. Handles Long Messages:
-   - Automatically splits messages if they exceed Discord's 2000-character limit.
+| Source | Implemented behavior |
+| :--- | :--- |
+| Shodan | Fetches stored host observations and extracts service ports and banners |
+| VirusTotal | Retrieves IP-address attributes through the v3 API |
+| WHOIS | Calls the WHOIS library in a worker thread |
+| Tor Project | Checks the current exit-address list for a match |
+| Discord | Registers `/ip` and splits long text responses |
 
-8. Modular & Safe:
-   - API calls are wrapped to prevent the bot from crashing.
-   - Reuses aiohttp session to reduce overhead.
-   - Async-compatible for efficient performance.
+## Quick start
 
-Requirements:
--------------
-- Python 3.10+
-- Libraries:
-    discord.py >= 2.3
-    aiohttp
-    shodan
-    python-whois
-- Shodan API Key
-- VirusTotal API Key
-- Discord Bot Token
+Requires Python and a Discord application with a bot token, plus Shodan and VirusTotal API keys. Keep the bundled `raven.png`: startup verifies that it is a readable image.
 
-Installation:
--------------
-1. Clone or download this repository.
-2. Install Python dependencies:
-   pip install -r requirements.txt
-   (or install manually: discord.py, aiohttp, shodan, python-whois)
-3. Create a `config.json` file in the same folder with the following structure:
-   {
-       "TOKEN": "YOUR_DISCORD_BOT_TOKEN",
-       "SHODAN_KEY": "YOUR_SHODAN_API_KEY",
-       "VIRUSTOTAL_API_KEY": "YOUR_VIRUSTOTAL_API_KEY"
-   }
-4. Run the bot:
-   python ip_checker_bot.py
+```bash
+git clone https://github.com/r4venrudy/rudy-ip-checker.git
+cd rudy-ip-checker
+python -m pip install discord.py aiohttp Pillow python-whois
+```
 
-Usage:
-------
-1. Invite the bot to your Discord server.
-2. Use the slash command `/ip <IP_ADDRESS>` in any channel the bot has access to.
-   Example: `/ip 8.8.8.8`
-3. The bot will reply with:
-   - Shodan analysis
-   - VirusTotal analysis
-   - WHOIS information
-   - TOR exit node status
-   - Geolocation info with Google Maps link
-   - Open ports and possible services
-   - Screenshots if available
-4. Long results are split across multiple messages to fit Discord limits.
+Create a local `config.json` using your own credentials:
 
-Notes:
-------
-- Ensure your Shodan API key has sufficient credits if you plan to request scans.
-- VirusTotal limits may apply based on the API tier.
-- WHOIS lookups may be slow for certain IP addresses since the library performs blocking network calls in a separate thread.
-- TOR exit node list is fetched from the official TOR project list; it may take a few seconds.
-- All IP addresses are validated before processing.
+```json
+{
+  "TOKEN": "YOUR_DISCORD_BOT_TOKEN",
+  "SHODAN_KEY": "YOUR_SHODAN_API_KEY",
+  "VIRUSTOTAL_API_KEY": "YOUR_VIRUSTOTAL_API_KEY"
+}
+```
 
-Logging:
---------
-- The bot logs detailed information in the console, including API errors, connection issues, and command usage.
-- Unnecessary Shard info logs are filtered out automatically.
+```bash
+python main.py
+```
 
-Extending:
-----------
-- Add more API integrations by creating new async methods similar to `fetch_shodan_host_info` or `get_virustotal_data`.
-- Add more command options in the Discord bot by using `client.tree.command`.
-- Customize logging and error handling in the `AClient` class.
+Invite the bot with the `bot` and `applications.commands` scopes and permission to view/send messages. Use `/ip 8.8.8.8` in Discord.
 
-Support:
---------
-- For issues with API keys, consult Shodan and VirusTotal documentation.
-- For Discord bot issues, ensure the bot has proper permissions in your server.
+## Implementation notes
 
-Author:
--------
-- Created by @r4ven.leet
-- Designed for cybersecurity research, IP intelligence, and network reconnaissance.
+- The entry point is `main.py`. The legacy dependency file omits Pillow and uses different package names; the explicit install command above matches the imports used by the bot.
+- Shodan is queried for existing observations. The code does not initiate a new Shodan scan, capture screenshots or implement a separate geolocation service.
+- API access, rate limits, WHOIS IP support and Discord runtime compatibility need validation in your environment. This documentation review did not run authenticated integrations.
+- Replies are public in the channel. Keep credentials local and use the bot only for authorized investigations.
 
-License:
---------
-- Use responsibly. Not intended for malicious purposes. Ensure compliance with all local laws and API terms of service.
+## Project map
+
+```text
+main.py          Discord command and enrichment integrations
+config.json      Local API and Discord configuration
+requirements.txt Legacy dependency list
+raven.png        Required startup asset
+```
+
+## License
+
+[MIT](LICENSE). Preserve the attribution in the license file.
+
+---
+
+<p align="center">Part of the <a href="https://github.com/r4venrudy">r4venrudy</a> project collection.</p>
