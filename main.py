@@ -89,6 +89,7 @@ class AClient(discord.Client):
         self.shodan_key=shodan_key
         self.virustotal_key=virustotal_key
         self.session=None
+        self.tor_cache=None
         self.tree=discord.app_commands.CommandTree(self)
         self.rate_limiter=asyncio.Semaphore(RATE_LIMIT)
 
@@ -113,8 +114,14 @@ class AClient(discord.Client):
             return await r.text()
 
     async def get_tor_exit_nodes(self):
+        # the exit list is ~1 MB and changes slowly, so reuse it for 30 minutes
+        now=asyncio.get_running_loop().time()
+        if self.tor_cache and now-self.tor_cache[0]<1800:
+            return self.tor_cache[1]
         t=await self.fetch("https://check.torproject.org/exit-addresses")
-        return [l.split()[1] for l in t.splitlines() if l.startswith("ExitAddress")]
+        nodes={l.split()[1] for l in t.splitlines() if l.startswith("ExitAddress")}
+        self.tor_cache=(now,nodes)
+        return nodes
 
     async def fetch_whois_data(self,ip):
         loop=asyncio.get_event_loop()
