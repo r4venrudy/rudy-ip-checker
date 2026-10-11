@@ -1,0 +1,46 @@
+name: Build and publish package
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths: [Dockerfile, .dockerignore, .github/workflows/package.yml, '**.py', '**.js', '**.c', '**.cpp', '**.h', '**.hpp', requirements.txt, package.json, package-lock.json, pyproject.toml, CMakeLists.txt, 'rules/**', 'packaging/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build tested image
+        run: docker build --pull -t rudy-package:test .
+      - name: Offline package smoke test
+        run: docker run --rm --network none --read-only --tmpfs /tmp -e DISCORD_TOKEN=offline-dummy -e SHODAN_KEY=offline-dummy -e VIRUSTOTAL_API_KEY=offline-dummy rudy-package:test --check-config
+      - name: Reject missing credentials offline
+        run: |
+          if docker run --rm --network none --read-only --tmpfs /tmp rudy-package:test --check-config; then
+            echo 'Missing credentials unexpectedly succeeded' >&2
+            exit 1
+          fi
+      - name: Publish verified image
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ghcr.io/r4venrudy/rudy-ip-checker
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker tag rudy-package:test "$IMAGE:latest"
+          docker tag rudy-package:test "$IMAGE:sha-$GITHUB_SHA"
+          docker push "$IMAGE:sha-$GITHUB_SHA"
+          docker push "$IMAGE:latest"
+          docker logout ghcr.io
+          echo "Published $IMAGE:sha-$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

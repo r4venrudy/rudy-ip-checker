@@ -416,3 +416,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+.env
+.env.*
+!.env.example
+config.json
+node_modules/
+__pycache__/

@@ -1,0 +1,14 @@
+**
+!Dockerfile
+!requirements.txt
+!main.py
+!raven.png
+!LICENSE
+!rudy_runtime/
+!rudy_runtime/**
+!tests/
+!tests/**
+**/__pycache__
+**/*.pyc
+**/__pycache__
+**/*.pyc
