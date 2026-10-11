@@ -1,5 +1,4 @@
-discord
-aiohttp
-shodan
-whois
-python-nmap
+discord.py>=2.3
+aiohttp>=3.9
+python-whois>=0.9
+Pillow>=10.0
