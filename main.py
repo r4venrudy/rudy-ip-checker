@@ -1,13 +1,11 @@
 import os
 import sys
 from PIL import Image
-import json
 import logging
 import discord
 import aiohttp
 import asyncio
 import whois
-from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 import ipaddress
 
