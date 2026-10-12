@@ -96,6 +96,11 @@ class AClient(discord.Client):
         h={'x-apikey':self.virustotal_key}
         u=f"https://www.virustotal.com/api/v3/ip_addresses/{ip}"
         async with self.session.get(u,headers=h) as r:
+            if r.status in (401,403):
+                raise RuntimeError("VirusTotal rejected the API key")
+            if r.status==429:
+                raise RuntimeError("VirusTotal quota exceeded")
+            r.raise_for_status()
             return await r.json()
 
     async def send_split_messages(self,i,m):
