@@ -122,9 +122,11 @@ def run_discord_bot(token,shodan_key,virustotal_key):
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
     async def ip(interaction:discord.Interaction,ip:str):
-        if not validate_ip(ip):
+        if not validate_ip(ip.strip()):
             await interaction.response.send_message("Invalid IP address.",ephemeral=True)
             return
+        # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
+        ip=str(ipaddress.ip_address(ip.strip())) if validate_ip(ip.strip()) else ip
         if not ipaddress.ip_address(ip).is_global:
             await interaction.response.send_message("That is a private or reserved address; public sources have no data for it.",ephemeral=True)
             return
