@@ -1,0 +1,48 @@
+"""Pure helpers for formatting /ip results; kept free of Discord imports so they are easy to test."""
+
+import ipaddress
+import re
+
+DISCORD_MESSAGE_LIMIT=2000
+
+def validate_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except:
+        return False
+
+def clean_banner(banner):
+    banner=re.sub(r'<[^>]+>','',banner)
+    banner=re.sub(r'\s+;|\\n|\\r|\\t',' ',banner)
+    return banner[:100]+"..." if len(banner)>100 else banner
+
+def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
+    chunks=[]
+    cur=""
+    for line in m.split("\n"):
+        # a single line longer than the limit is hard-wrapped
+        while len(line)>=limit:
+            if cur:
+                chunks.append(cur)
+                cur=""
+            chunks.append(line[:limit])
+            line=line[limit:]
+        if len(cur)+len(line)+1>limit:
+            chunks.append(cur)
+            cur=""
+        cur+=line+"\n"
+    if cur.strip():
+        chunks.append(cur)
+    return chunks or ["No data found."]
+
+def summarize_virustotal(vt):
+    a=vt.get("data",{}).get("attributes",{})
+    if not a:
+        return ["VirusTotal: no data"]
+    st=a.get("last_analysis_stats",{})
+    out=[f"VirusTotal: {st.get('malicious',0)} malicious, {st.get('suspicious',0)} suspicious, {st.get('harmless',0)} harmless"]
+    for key,label in (("reputation","Reputation"),("as_owner","AS owner"),("asn","ASN"),("country","Country"),("network","Network")):
+        if a.get(key) not in (None,""):
+            out.append(f"{label}: {a[key]}")
+    return out

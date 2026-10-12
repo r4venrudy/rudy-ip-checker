@@ -9,7 +9,6 @@ import asyncio
 import whois
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-import re
 import ipaddress
 
 def raven_fail():
@@ -29,7 +28,6 @@ except:
     raven_fail()
 
 executor=ThreadPoolExecutor()
-DISCORD_MESSAGE_LIMIT=2000
 RATE_LIMIT=5
 
 handler=logging.StreamHandler()
@@ -42,51 +40,10 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
+from rudy_runtime.formatting import clean_banner, split_message, summarize_virustotal, validate_ip
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
-
-def validate_ip(ip):
-    try:
-        ipaddress.ip_address(ip)
-        return True
-    except:
-        return False
-
-def clean_banner(banner):
-    banner=re.sub(r'<[^>]+>','',banner)
-    banner=re.sub(r'\s+;|\\n|\\r|\\t',' ',banner)
-    return banner[:100]+"..." if len(banner)>100 else banner
-
-def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
-    chunks=[]
-    cur=""
-    for line in m.split("\n"):
-        # a single line longer than the limit is hard-wrapped
-        while len(line)>=limit:
-            if cur:
-                chunks.append(cur)
-                cur=""
-            chunks.append(line[:limit])
-            line=line[limit:]
-        if len(cur)+len(line)+1>limit:
-            chunks.append(cur)
-            cur=""
-        cur+=line+"\n"
-    if cur.strip():
-        chunks.append(cur)
-    return chunks or ["No data found."]
-
-def summarize_virustotal(vt):
-    a=vt.get("data",{}).get("attributes",{})
-    if not a:
-        return ["VirusTotal: no data"]
-    st=a.get("last_analysis_stats",{})
-    out=[f"VirusTotal: {st.get('malicious',0)} malicious, {st.get('suspicious',0)} suspicious, {st.get('harmless',0)} harmless"]
-    for key,label in (("reputation","Reputation"),("as_owner","AS owner"),("asn","ASN"),("country","Country"),("network","Network")):
-        if a.get(key) not in (None,""):
-            out.append(f"{label}: {a[key]}")
-    return out
 
 class AClient(discord.Client):
     def __init__(self,shodan_key,virustotal_key):
