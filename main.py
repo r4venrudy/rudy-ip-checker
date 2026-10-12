@@ -136,6 +136,10 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         w=await section("WHOIS",c.fetch_whois_data(ip))
         if w:
             for k,v in w.items():
+                if v in (None,"",[]):
+                    continue
+                if isinstance(v,(list,tuple,set)):
+                    v=", ".join(str(x) for x in v)
                 info.append(f"{k}: {v}")
         vt=await section("VirusTotal",c.get_virustotal_data(ip))
         if vt:
