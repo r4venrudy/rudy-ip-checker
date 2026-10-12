@@ -62,10 +62,19 @@ Invite the bot with the `bot` and `applications.commands` scopes and permission 
 ## Project map
 
 ```text
-main.py          Discord command and enrichment integrations
-config.json      Local API and Discord configuration
-requirements.txt Legacy dependency list
-raven.png        Required startup asset
+main.py                     Discord command and enrichment integrations
+rudy_runtime/config.py      Environment / config.json loading and validation
+rudy_runtime/formatting.py  IP validation, banner cleanup, message splitting, VirusTotal summary
+tests/                      Unit tests (run during the Docker build)
+config.json                 Local API and Discord configuration (YOUR_ placeholders)
+requirements.txt            Pinned Python dependencies
+raven.png                   Required startup asset
+```
+
+Run the tests locally with:
+
+```sh
+python -m unittest discover -s tests -v
 ```
 
 ## GitHub package
