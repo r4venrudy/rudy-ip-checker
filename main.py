@@ -46,13 +46,6 @@ from rudy_runtime.config import load_config as load_runtime_config
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
 
-def check_configurations(config):
-    required=['TOKEN','SHODAN_KEY','VIRUSTOTAL_API_KEY']
-    missing=[k for k in required if not config.get(k)]
-    if missing:
-        logging.error("config.json is missing: %s",", ".join(missing))
-    return not missing
-
 def validate_ip(ip):
     try:
         ipaddress.ip_address(ip)
@@ -197,9 +190,12 @@ def run_discord_bot(token,shodan_key,virustotal_key):
     c.run(token)
 
 if __name__=="__main__":
-    config=load_config()
+    try:
+        config=load_config()
+    except ValueError as e:
+        logging.error("%s (set them as environment variables or in config.json)",e)
+        raise SystemExit(1)
     if '--check-config' in sys.argv:
         print('Configuration and dependencies ready')
         raise SystemExit(0)
-    if check_configurations(config):
-        run_discord_bot(config["TOKEN"],config["SHODAN_KEY"],config["VIRUSTOTAL_API_KEY"])
+    run_discord_bot(config["TOKEN"],config["SHODAN_KEY"],config["VIRUSTOTAL_API_KEY"])
