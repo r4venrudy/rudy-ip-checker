@@ -56,6 +56,8 @@ class AClient(discord.Client):
     async def setup_hook(self):
         # aiohttp sessions must be created inside the running event loop
         self.session=aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20))
+        # sync once at startup; on_ready also fires on every reconnect
+        await self.tree.sync()
 
     async def close(self):
         if self.session:
@@ -116,7 +118,6 @@ def run_discord_bot(token,shodan_key,virustotal_key):
 
     @c.event
     async def on_ready():
-        await c.tree.sync()
         await c.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,name=f"/ip on {len(c.guilds)} servers"))
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
