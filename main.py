@@ -84,8 +84,8 @@ class AClient(discord.Client):
         return nodes
 
     async def fetch_whois_data(self,ip):
-        loop=asyncio.get_event_loop()
-        return await loop.run_in_executor(None,whois.whois,ip)
+        loop=asyncio.get_running_loop()
+        return await loop.run_in_executor(executor,whois.whois,ip)
 
     async def get_virustotal_data(self,ip):
         h={'x-apikey':self.virustotal_key}
