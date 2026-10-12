@@ -128,6 +128,10 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             await interaction.response.send_message("That is a private or reserved address; public sources have no data for it.",ephemeral=True)
             return
         await interaction.response.defer(ephemeral=False)
+        async with c.rate_limiter:
+            await run_lookup(interaction,ip)
+
+    async def run_lookup(interaction,ip):
         info=[]
         async def section(name,coro):
             try:
