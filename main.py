@@ -116,9 +116,21 @@ class AClient(discord.Client):
 def run_discord_bot(token,shodan_key,virustotal_key):
     c=AClient(shodan_key,virustotal_key)
 
+    async def update_presence():
+        await c.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,name=f"/ip on {len(c.guilds)} servers"))
+
     @c.event
     async def on_ready():
-        await c.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,name=f"/ip on {len(c.guilds)} servers"))
+        logging.info("Logged in as %s on %d servers",c.user,len(c.guilds))
+        await update_presence()
+
+    @c.event
+    async def on_guild_join(guild):
+        await update_presence()
+
+    @c.event
+    async def on_guild_remove(guild):
+        await update_presence()
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
     async def ip(interaction:discord.Interaction,ip:str):
