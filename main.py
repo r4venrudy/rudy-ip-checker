@@ -67,7 +67,12 @@ class AClient(discord.Client):
         url=f"https://api.shodan.io/shodan/host/{ip}"
         params={'key':self.shodan_key,'minify':'false'}
         async with self.session.get(url,params=params) as r:
-            return await r.json() if r.status==200 else None
+            if r.status==404:
+                return None
+            if r.status in (401,403):
+                raise RuntimeError("Shodan rejected the API key")
+            r.raise_for_status()
+            return await r.json()
 
     async def fetch(self,url):
         async with self.session.get(url) as r:
