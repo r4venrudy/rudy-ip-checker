@@ -136,17 +136,21 @@ def run_discord_bot(token,shodan_key,virustotal_key):
                 logging.warning("%s lookup failed for %s: %s",name,ip,e)
                 info.append(f"{name}: lookup failed")
                 return None
-        s=await section("Shodan",c.fetch_shodan_host_info(ip))
+        # the four sources are independent, so query them at the same time
+        s,tor,w,vt=await asyncio.gather(
+            section("Shodan",c.fetch_shodan_host_info(ip)),
+            section("Tor",c.get_tor_exit_nodes()),
+            section("WHOIS",c.fetch_whois_data(ip)),
+            section("VirusTotal",c.get_virustotal_data(ip)),
+        )
         if s is None:
             if "Shodan: lookup failed" not in info:
                 info.append("Shodan: no data for this address")
         else:
             for d in s.get("data",[]):
                 info.append(f"Port {d.get('port')} - {clean_banner(d.get('data',''))}")
-        tor=await section("Tor",c.get_tor_exit_nodes())
         if tor is not None:
             info.append("Tor: Yes" if ip in tor else "Tor: No")
-        w=await section("WHOIS",c.fetch_whois_data(ip))
         if w:
             for k,v in w.items():
                 if v in (None,"",[]):
@@ -154,7 +158,6 @@ def run_discord_bot(token,shodan_key,virustotal_key):
                 if isinstance(v,(list,tuple,set)):
                     v=", ".join(str(x) for x in v)
                 info.append(f"{k}: {v}")
-        vt=await section("VirusTotal",c.get_virustotal_data(ip))
         if vt:
             info.extend(summarize_virustotal(vt))
         await c.send_split_messages(interaction,"\n".join(info))
