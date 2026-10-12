@@ -127,7 +127,10 @@ def run_discord_bot(token,shodan_key,virustotal_key):
                 info.append(f"{name}: lookup failed")
                 return None
         s=await section("Shodan",c.fetch_shodan_host_info(ip))
-        if s:
+        if s is None:
+            if "Shodan: lookup failed" not in info:
+                info.append("Shodan: no data for this address")
+        else:
             for d in s.get("data",[]):
                 info.append(f"Port {d.get('port')} - {clean_banner(d.get('data',''))}")
         tor=await section("Tor",c.get_tor_exit_nodes())
