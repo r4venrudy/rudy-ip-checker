@@ -14,7 +14,8 @@ def validate_ip(ip):
 
 def clean_banner(banner):
     banner=re.sub(r'<[^>]+>','',banner)
-    banner=re.sub(r'\s+;|\\n|\\r|\\t',' ',banner)
+    # Shodan banners contain real CR/LF/tab characters; collapse them so each port stays on one line
+    banner=re.sub(r'\s+',' ',banner).strip()
     return banner[:100]+"..." if len(banner)>100 else banner
 
 def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
