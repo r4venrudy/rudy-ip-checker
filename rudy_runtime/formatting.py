@@ -6,6 +6,7 @@ import re
 DISCORD_MESSAGE_LIMIT=2000
 
 def validate_ip(ip):
+    """True for any valid IPv4 or IPv6 address string."""
     try:
         ipaddress.ip_address(ip)
         return True
@@ -13,12 +14,14 @@ def validate_ip(ip):
         return False
 
 def clean_banner(banner):
+    """Strip HTML tags and collapse whitespace so a service banner fits on one line (max 100 chars)."""
     banner=re.sub(r'<[^>]+>','',banner)
     # Shodan banners contain real CR/LF/tab characters; collapse them so each port stays on one line
     banner=re.sub(r'\s+',' ',banner).strip()
     return banner[:100]+"..." if len(banner)>100 else banner
 
 def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
+    """Split text on line boundaries into chunks Discord accepts; over-long lines are hard-wrapped."""
     chunks=[]
     cur=""
     for line in m.split("\n"):
@@ -38,6 +41,7 @@ def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
     return chunks or ["No data found."]
 
 def summarize_virustotal(vt):
+    """Short human summary of a VirusTotal v3 IP report: detections, reputation and network owner."""
     a=vt.get("data",{}).get("attributes",{})
     if not a:
         return ["VirusTotal: no data"]
