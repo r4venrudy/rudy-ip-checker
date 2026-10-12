@@ -59,6 +59,22 @@ Invite the bot with the `bot` and `applications.commands` scopes and permission 
 - API access, rate limits, WHOIS IP support and Discord runtime compatibility need validation in your environment. This documentation review did not run authenticated integrations.
 - Replies are public in the channel. Keep credentials local and use the bot only for authorized investigations.
 
+## Example reply
+
+`/ip 8.8.8.8` returns something like:
+
+```text
+Port 53 - Recursion: enabled
+Port 443 - HTTP/1.1 200 OK Server: scaffolding on HTTPServer2
+Tor: No
+asn_description: GOOGLE, US
+VirusTotal: 0 malicious, 0 suspicious, 62 harmless
+AS owner: GOOGLE
+Country: US
+```
+
+Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `lookup failed` while the others still answer. Up to 5 lookups run at once.
+
 ## Project map
 
 ```text
