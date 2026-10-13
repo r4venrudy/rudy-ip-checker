@@ -172,7 +172,9 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         else:
             for d in s.get("data",[]):
                 info.append(f"Port {d.get('port')} - {clean_banner(d.get('data',''))}")
-        if tor is not None:
+        if ipaddress.ip_address(ip).version==6:
+            info.append("Tor: not checked (the public exit list only has IPv4 addresses)")
+        elif tor is not None:
             info.append("Tor: Yes" if ip in tor else "Tor: No")
         if w:
             for k,v in w.items():
