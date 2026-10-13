@@ -14,16 +14,16 @@
 
 ## Overview
 
-A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal, WHOIS and the Tor Project exit-node list. IPv4 and IPv6 inputs are validated before the integrations run; long output is split into Discord messages.
+A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal, RDAP (registry WHOIS) and the Tor Project exit-node list. IPv4 and IPv6 inputs are validated before the integrations run; long output is split into Discord messages.
 
 ## Capabilities
 
 | Source | Implemented behavior |
 | :--- | :--- |
-| Shodan | Fetches stored host observations and extracts service ports and banners |
+| Shodan | Organization, ISP, OS, hostnames, known CVEs, then open ports with banners |
 | VirusTotal | Retrieves IP-address attributes through the v3 API |
-| WHOIS | Calls the WHOIS library in a worker thread |
-| Tor Project | Checks the current exit-address list for a match |
+| RDAP | Network name, range, country, owner and abuse contact via rdap.org |
+| Tor Project | Checks the exit-address list (IPv4 only, cached 30 minutes) |
 | Discord | Registers `/ip` and splits long text responses |
 
 ## Quick start
@@ -56,7 +56,7 @@ Invite the bot with the `bot` and `applications.commands` scopes and permission 
 
 - The entry point is `main.py`. The legacy dependency file omits Pillow and uses different package names; the explicit install command above matches the imports used by the bot.
 - Shodan is queried for existing observations. The code does not initiate a new Shodan scan, capture screenshots or implement a separate geolocation service.
-- API access, rate limits, WHOIS IP support and Discord runtime compatibility need validation in your environment. This documentation review did not run authenticated integrations.
+- API access, rate limits, RDAP availability and Discord runtime compatibility need validation in your environment. This documentation review did not run authenticated integrations.
 - Replies are public in the channel. Keep credentials local and use the bot only for authorized investigations.
 
 ## Example reply
@@ -64,10 +64,15 @@ Invite the bot with the `bot` and `applications.commands` scopes and permission 
 `/ip 8.8.8.8` returns something like:
 
 ```text
-Port 53 - Recursion: enabled
-Port 443 - HTTP/1.1 200 OK Server: scaffolding on HTTPServer2
+Organization: Google LLC
+Hostnames: dns.google
+Port 53/udp - Recursion: enabled
+Port 443/tcp - HTTP/1.1 200 OK Server: scaffolding on HTTPServer2
 Tor: No
-asn_description: GOOGLE, US
+Network: GOGL (NET-8-8-8-0-2)
+Range: 8.8.8.0 - 8.8.8.255
+Owner: Google LLC
+Abuse contact: network-abuse@google.com
 VirusTotal: 0 malicious, 0 suspicious, 62 harmless
 AS owner: GOOGLE
 Country: US
