@@ -78,6 +78,7 @@ class AClient(discord.Client):
 
     async def fetch(self,url):
         async with self.session.get(url) as r:
+            r.raise_for_status()
             return await r.text()
 
     async def get_tor_exit_nodes(self):
@@ -87,6 +88,9 @@ class AClient(discord.Client):
             return self.tor_cache[1]
         t=await self.fetch("https://check.torproject.org/exit-addresses")
         nodes={l.split()[1] for l in t.splitlines() if l.startswith("ExitAddress")}
+        if not nodes:
+            # an error page or empty body would otherwise make every address look like "Tor: No"
+            raise RuntimeError("Tor exit list was empty")
         self.tor_cache=(now,nodes)
         return nodes
 
