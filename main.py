@@ -5,8 +5,6 @@ import logging
 import discord
 import aiohttp
 import asyncio
-import whois
-from concurrent.futures import ThreadPoolExecutor
 import ipaddress
 
 def raven_fail():
@@ -25,7 +23,6 @@ try:
 except:
     raven_fail()
 
-executor=ThreadPoolExecutor()
 RATE_LIMIT=5
 
 handler=logging.StreamHandler()
@@ -38,7 +35,7 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
-from rudy_runtime.formatting import canonical_ip, split_message, summarize_shodan, summarize_virustotal
+from rudy_runtime.formatting import canonical_ip, split_message, summarize_rdap, summarize_shodan, summarize_virustotal
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
@@ -62,7 +59,6 @@ class AClient(discord.Client):
     async def close(self):
         if self.session:
             await self.session.close()
-        executor.shutdown(wait=False)
         await super().close()
 
     async def fetch_shodan_host_info(self,ip):
@@ -94,9 +90,14 @@ class AClient(discord.Client):
         self.tor_cache=(now,nodes)
         return nodes
 
-    async def fetch_whois_data(self,ip):
-        loop=asyncio.get_running_loop()
-        return await loop.run_in_executor(executor,whois.whois,ip)
+    async def fetch_rdap(self,ip):
+        # python-whois only understands domains and returned an all-empty record for IPs;
+        # rdap.org redirects to the regional registry (ARIN, RIPE, ...) that owns the block
+        async with self.session.get(f"https://rdap.org/ip/{ip}",headers={'Accept':'application/rdap+json'}) as r:
+            if r.status==404:
+                return None
+            r.raise_for_status()
+            return await r.json(content_type=None)
 
     async def get_virustotal_data(self,ip):
         h={'x-apikey':self.virustotal_key}
@@ -163,7 +164,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         s,tor,w,vt=await asyncio.gather(
             section("Shodan",c.fetch_shodan_host_info(ip)),
             section("Tor",c.get_tor_exit_nodes()),
-            section("WHOIS",c.fetch_whois_data(ip)),
+            section("WHOIS",c.fetch_rdap(ip)),
             section("VirusTotal",c.get_virustotal_data(ip)),
         )
         if s is None:
@@ -176,12 +177,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         elif tor is not None:
             info.append("Tor: Yes" if ip in tor else "Tor: No")
         if w:
-            for k,v in w.items():
-                if v in (None,"",[]):
-                    continue
-                if isinstance(v,(list,tuple,set)):
-                    v=", ".join(str(x) for x in v)
-                info.append(f"{k}: {v}")
+            info.extend(summarize_rdap(w))
         if vt:
             info.extend(summarize_virustotal(vt))
         await c.send_split_messages(interaction,"\n".join(info))

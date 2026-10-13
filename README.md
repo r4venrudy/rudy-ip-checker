@@ -33,7 +33,7 @@ Requires Python and a Discord application with a bot token, plus Shodan and Viru
 ```bash
 git clone https://github.com/r4venrudy/rudy-ip-checker.git
 cd rudy-ip-checker
-python -m pip install discord.py aiohttp Pillow python-whois
+python -m pip install discord.py aiohttp Pillow
 ```
 
 Create a local `config.json` using your own credentials:
