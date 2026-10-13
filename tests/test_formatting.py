@@ -1,6 +1,6 @@
 import unittest
 
-from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_shodan, summarize_virustotal, validate_ip
+from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_rdap, summarize_shodan, summarize_virustotal, validate_ip
 
 
 class FormattingTests(unittest.TestCase):
@@ -60,3 +60,30 @@ class ShodanSummaryTests(unittest.TestCase):
 
     def test_empty_report(self):
         self.assertEqual(summarize_shodan({}), [])
+
+
+RDAP_SAMPLE = {
+    "handle": "NET-8-8-8-0-2", "name": "GOGL", "startAddress": "8.8.8.0", "endAddress": "8.8.8.255", "country": "US",
+    "entities": [{
+        "roles": ["registrant"],
+        "vcardArray": ["vcard", [["version", {}, "text", "4.0"], ["fn", {}, "text", "Google LLC"]]],
+        "entities": [{
+            "roles": ["abuse"],
+            "vcardArray": ["vcard", [["fn", {}, "text", "Abuse"], ["email", {}, "text", "network-abuse@google.com"]]],
+        }],
+    }],
+}
+
+
+class RdapSummaryTests(unittest.TestCase):
+    def test_full_network_object(self):
+        self.assertEqual(summarize_rdap(RDAP_SAMPLE), [
+            "Network: GOGL (NET-8-8-8-0-2)",
+            "Range: 8.8.8.0 - 8.8.8.255",
+            "Registered country: US",
+            "Owner: Google LLC",
+            "Abuse contact: network-abuse@google.com",
+        ])
+
+    def test_sparse_object(self):
+        self.assertEqual(summarize_rdap({"entities": [{"roles": ["abuse"]}]}), [])

@@ -75,3 +75,31 @@ def summarize_shodan(host):
     for d in sorted(host.get("data",[]),key=lambda d:d.get("port",0)):
         out.append(f"Port {d.get('port')}/{d.get('transport','tcp')} - {clean_banner(d.get('data',''))}")
     return out
+
+def _vcard(entity,field):
+    """First value of a vCard field (e.g. "fn", "email") in an RDAP entity's jCard."""
+    for item in (entity.get("vcardArray") or [None,[]])[1]:
+        if item and item[0]==field:
+            return item[3]
+    return None
+
+def summarize_rdap(rdap):
+    """Network name, address range, country, owner and abuse contact from an RDAP IP network object (RFC 9083)."""
+    out=[]
+    if rdap.get("name"):
+        out.append(f"Network: {rdap['name']}"+(f" ({rdap['handle']})" if rdap.get("handle") else ""))
+    if rdap.get("startAddress") and rdap.get("endAddress"):
+        out.append(f"Range: {rdap['startAddress']} - {rdap['endAddress']}")
+    if rdap.get("country"):
+        out.append(f"Registered country: {rdap['country']}")
+    entities=list(rdap.get("entities",[]))
+    # abuse contacts are usually nested under the registrant entity
+    for e in list(entities):
+        entities.extend(e.get("entities",[]))
+    owner=next((_vcard(e,"fn") for e in entities if "registrant" in e.get("roles",[]) and _vcard(e,"fn")),None)
+    if owner:
+        out.append(f"Owner: {owner}")
+    abuse=next((_vcard(e,"email") for e in entities if "abuse" in e.get("roles",[]) and _vcard(e,"email")),None)
+    if abuse:
+        out.append(f"Abuse contact: {abuse}")
+    return out
