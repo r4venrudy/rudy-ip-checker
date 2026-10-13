@@ -13,6 +13,13 @@ def validate_ip(ip):
     except:
         return False
 
+def canonical_ip(text):
+    """Canonical string for an IP ("2001:DB8::0001" -> "2001:db8::1", " 8.8.8.8 " -> "8.8.8.8"), or None if invalid."""
+    try:
+        return str(ipaddress.ip_address((text or "").strip()))
+    except ValueError:
+        return None
+
 def clean_banner(banner):
     """Strip HTML tags and collapse whitespace so a service banner fits on one line (max 100 chars)."""
     banner=re.sub(r'<[^>]+>','',banner)

@@ -38,7 +38,7 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
-from rudy_runtime.formatting import clean_banner, split_message, summarize_virustotal, validate_ip
+from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_virustotal
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
@@ -134,11 +134,11 @@ def run_discord_bot(token,shodan_key,virustotal_key):
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
     async def ip(interaction:discord.Interaction,ip:str):
-        if not validate_ip(ip.strip()):
+        # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
+        ip=canonical_ip(ip)
+        if ip is None:
             await interaction.response.send_message("Invalid IP address.",ephemeral=True)
             return
-        # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
-        ip=str(ipaddress.ip_address(ip.strip())) if validate_ip(ip.strip()) else ip
         if not ipaddress.ip_address(ip).is_global:
             await interaction.response.send_message("That is a private or reserved address; public sources have no data for it.",ephemeral=True)
             return
