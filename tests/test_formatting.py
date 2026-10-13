@@ -1,6 +1,6 @@
 import unittest
 
-from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_virustotal, validate_ip
+from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_shodan, summarize_virustotal, validate_ip
 
 
 class FormattingTests(unittest.TestCase):
@@ -41,3 +41,22 @@ class FormattingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShodanSummaryTests(unittest.TestCase):
+    def test_owner_cves_and_sorted_ports(self):
+        host = {
+            "org": "Example Org", "os": None, "hostnames": ["a.example", "b.example"],
+            "vulns": ["CVE-2021-%04d" % i for i in range(7)],
+            "data": [{"port": 443, "data": "HTTP/1.1 200 OK\r\n"}, {"port": 53, "transport": "udp", "data": ""}],
+        }
+        self.assertEqual(summarize_shodan(host), [
+            "Organization: Example Org",
+            "Hostnames: a.example, b.example",
+            "Known CVEs: CVE-2021-0000, CVE-2021-0001, CVE-2021-0002, CVE-2021-0003, CVE-2021-0004 (+2 more)",
+            "Port 53/udp - ",
+            "Port 443/tcp - HTTP/1.1 200 OK",
+        ])
+
+    def test_empty_report(self):
+        self.assertEqual(summarize_shodan({}), [])

@@ -58,3 +58,20 @@ def summarize_virustotal(vt):
         if a.get(key) not in (None,""):
             out.append(f"{label}: {a[key]}")
     return out
+
+def summarize_shodan(host):
+    """Owner, OS, hostnames and known CVEs from a Shodan host report, then one line per open port."""
+    out=[]
+    for key,label in (("org","Organization"),("isp","ISP"),("os","OS")):
+        if host.get(key):
+            out.append(f"{label}: {host[key]}")
+    if host.get("hostnames"):
+        out.append("Hostnames: "+", ".join(host["hostnames"][:5]))
+    vulns=host.get("vulns") or []
+    if vulns:
+        shown=sorted(vulns)[:5]
+        more=f" (+{len(vulns)-5} more)" if len(vulns)>5 else ""
+        out.append(f"Known CVEs: {', '.join(shown)}{more}")
+    for d in sorted(host.get("data",[]),key=lambda d:d.get("port",0)):
+        out.append(f"Port {d.get('port')}/{d.get('transport','tcp')} - {clean_banner(d.get('data',''))}")
+    return out

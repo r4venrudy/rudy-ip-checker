@@ -38,7 +38,7 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
-from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_virustotal
+from rudy_runtime.formatting import canonical_ip, split_message, summarize_shodan, summarize_virustotal
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
@@ -170,8 +170,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             if "Shodan: lookup failed" not in info:
                 info.append("Shodan: no data for this address")
         else:
-            for d in s.get("data",[]):
-                info.append(f"Port {d.get('port')} - {clean_banner(d.get('data',''))}")
+            info.extend(summarize_shodan(s))
         if ipaddress.ip_address(ip).version==6:
             info.append("Tor: not checked (the public exit list only has IPv4 addresses)")
         elif tor is not None:
