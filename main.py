@@ -163,6 +163,19 @@ def run_discord_bot(token,shodan_key,virustotal_key):
     async def on_guild_remove(guild):
         await update_presence()
 
+    @c.tree.error
+    async def on_command_error(interaction,error):
+        # without a reply the user keeps seeing "thinking..." until the interaction expires
+        logging.error("/%s failed",interaction.command.name if interaction.command else "?",exc_info=error)
+        message="The lookup failed, please try again."
+        try:
+            if interaction.response.is_done():
+                await interaction.followup.send(message,ephemeral=True)
+            else:
+                await interaction.response.send_message(message,ephemeral=True)
+        except discord.HTTPException:
+            pass
+
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
     async def ip(interaction:discord.Interaction,ip:str):
         # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
