@@ -177,6 +177,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             pass
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
+    @discord.app_commands.describe(ip="IPv4 or IPv6 address, e.g. 8.8.8.8 or 2606:4700:4700::1111")
     async def ip(interaction:discord.Interaction,ip:str):
         # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
         ip=canonical_ip(ip)
