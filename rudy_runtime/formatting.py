@@ -115,3 +115,32 @@ def summarize_abuseipdb(report):
     if d.get("usageType"):
         out.append(f"Usage type: {d['usageType']}")
     return out
+
+def build_report(ip,results,failed):
+    """Group the /ip output by source, in a fixed order, with a bold header per source.
+
+    results maps source name -> raw response (None when the source had nothing), failed is the set of
+    sources whose lookup raised. Sources that were skipped (no API key) are left out entirely.
+    """
+    tor_ipv6=ipaddress.ip_address(ip).version==6
+    order=(
+        ("Shodan",lambda r:summarize_shodan(r) if r else ["No data for this address"]),
+        ("Tor",lambda r:["Not checked (the public exit list only has IPv4 addresses)"] if tor_ipv6
+            else ["Exit node: Yes" if ip in r else "Exit node: No"] if r is not None else []),
+        ("WHOIS",lambda r:summarize_rdap(r) if r else ["No registry data"]),
+        ("VirusTotal",lambda r:summarize_virustotal(r) if r else []),
+        ("AbuseIPDB",lambda r:summarize_abuseipdb(r) if r else []),
+    )
+    out=[]
+    for name,fmt in order:
+        if name in failed:
+            lines=["Lookup failed"]
+        elif name not in results:
+            continue
+        else:
+            lines=fmt(results[name])
+        if lines:
+            out.append(f"**{name}**")
+            out.extend(lines)
+            out.append("")
+    return "\n".join(out).strip()

@@ -65,21 +65,28 @@ Invite the bot with the `bot` and `applications.commands` scopes and permission 
 `/ip 8.8.8.8` returns something like:
 
 ```text
+**Shodan**
 Organization: Google LLC
 Hostnames: dns.google
 Port 53/udp - Recursion: enabled
 Port 443/tcp - HTTP/1.1 200 OK Server: scaffolding on HTTPServer2
-Tor: No
+
+**Tor**
+Exit node: No
+
+**WHOIS**
 Network: GOGL (NET-8-8-8-0-2)
 Range: 8.8.8.0 - 8.8.8.255
 Owner: Google LLC
 Abuse contact: network-abuse@google.com
+
+**VirusTotal**
 VirusTotal: 0 malicious, 0 suspicious, 62 harmless
 AS owner: GOOGLE
 Country: US
 ```
 
-Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `lookup failed` while the others still answer. Up to 5 lookups run at once, and each user waits `COOLDOWN_SECONDS` (default 15) between lookups so the API quotas last.
+Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `Lookup failed` under its own heading while the others still answer. Up to 5 lookups run at once, and each user waits `COOLDOWN_SECONDS` (default 15) between lookups so the API quotas last.
 
 ## Project map
 

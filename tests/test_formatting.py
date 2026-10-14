@@ -1,6 +1,6 @@
 import unittest
 
-from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_abuseipdb, summarize_rdap, summarize_shodan, summarize_virustotal, validate_ip
+from rudy_runtime.formatting import build_report, canonical_ip, clean_banner, split_message, summarize_abuseipdb, summarize_rdap, summarize_shodan, summarize_virustotal, validate_ip
 
 
 class FormattingTests(unittest.TestCase):
@@ -101,3 +101,17 @@ class AbuseIpdbSummaryTests(unittest.TestCase):
 
     def test_empty(self):
         self.assertEqual(summarize_abuseipdb({}), ["AbuseIPDB: no data"])
+
+
+class BuildReportTests(unittest.TestCase):
+    def test_sections_in_fixed_order_with_failures_in_place(self):
+        results = {"Tor": {"1.2.3.4"}, "Shodan": None, "WHOIS": RDAP_SAMPLE}
+        report = build_report("1.2.3.4", results, {"VirusTotal"})
+        self.assertEqual(report.split("\n\n")[0], "**Shodan**\nNo data for this address")
+        self.assertIn("**Tor**\nExit node: Yes", report)
+        self.assertTrue(report.endswith("**VirusTotal**\nLookup failed"))
+        self.assertNotIn("AbuseIPDB", report)
+        self.assertLess(report.index("**WHOIS**"), report.index("**VirusTotal**"))
+
+    def test_ipv6_tor_note(self):
+        self.assertIn("only has IPv4", build_report("2001:db8::1", {"Tor": set()}, set()))

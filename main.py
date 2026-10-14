@@ -36,7 +36,7 @@ logging.basicConfig(
 
 from rudy_runtime.config import load_config as load_runtime_config
 from rudy_runtime.cooldown import Cooldown
-from rudy_runtime.formatting import canonical_ip, split_message, summarize_abuseipdb, summarize_rdap, summarize_shodan, summarize_virustotal
+from rudy_runtime.formatting import build_report, canonical_ip, split_message
 
 # VirusTotal's free tier allows 4 requests a minute, so space out each user's lookups
 cooldown=Cooldown(int(os.environ.get("COOLDOWN_SECONDS","15") or 0))
@@ -174,38 +174,24 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             await run_lookup(interaction,ip)
 
     async def run_lookup(interaction,ip):
-        info=[]
+        results,failed={},set()
         async def section(name,coro):
             try:
-                return await coro
+                results[name]=await coro
             except Exception as e:
                 logging.warning("%s lookup failed for %s: %s",name,ip,e)
-                info.append(f"{name}: lookup failed")
-                return None
-        # the four sources are independent, so query them at the same time
-        s,tor,w,vt,ab=await asyncio.gather(
-            section("Shodan",c.fetch_shodan_host_info(ip)),
-            section("Tor",c.get_tor_exit_nodes()),
-            section("WHOIS",c.fetch_rdap(ip)),
-            section("VirusTotal",c.get_virustotal_data(ip)),
-            section("AbuseIPDB",c.get_abuseipdb(ip)),
-        )
-        if s is None:
-            if "Shodan: lookup failed" not in info:
-                info.append("Shodan: no data for this address")
-        else:
-            info.extend(summarize_shodan(s))
-        if ipaddress.ip_address(ip).version==6:
-            info.append("Tor: not checked (the public exit list only has IPv4 addresses)")
-        elif tor is not None:
-            info.append("Tor: Yes" if ip in tor else "Tor: No")
-        if w:
-            info.extend(summarize_rdap(w))
-        if vt:
-            info.extend(summarize_virustotal(vt))
-        if ab:
-            info.extend(summarize_abuseipdb(ab))
-        await c.send_split_messages(interaction,"\n".join(info))
+                failed.add(name)
+        sources=[
+            ("Shodan",c.fetch_shodan_host_info(ip)),
+            ("Tor",c.get_tor_exit_nodes()),
+            ("WHOIS",c.fetch_rdap(ip)),
+            ("VirusTotal",c.get_virustotal_data(ip)),
+        ]
+        if os.environ.get("ABUSEIPDB_KEY"):
+            sources.append(("AbuseIPDB",c.get_abuseipdb(ip)))
+        # the sources are independent, so query them at the same time
+        await asyncio.gather(*(section(name,coro) for name,coro in sources))
+        await c.send_split_messages(interaction,build_report(ip,results,failed))
 
     c.run(token)
 
