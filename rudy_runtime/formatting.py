@@ -6,14 +6,6 @@ from datetime import datetime, timezone
 
 DISCORD_MESSAGE_LIMIT=2000
 
-def validate_ip(ip):
-    """True for any valid IPv4 or IPv6 address string."""
-    try:
-        ipaddress.ip_address(ip)
-        return True
-    except:
-        return False
-
 def canonical_ip(text):
     """Canonical string for an IP ("2001:DB8::0001" -> "2001:db8::1", " 8.8.8.8 " -> "8.8.8.8"), or None if invalid."""
     try:
