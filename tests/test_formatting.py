@@ -29,6 +29,16 @@ class FormattingTests(unittest.TestCase):
     def test_split_message_empty(self):
         self.assertEqual(split_message(""), ["No data found."])
 
+    def test_virustotal_engines_and_date(self):
+        vt = {"data": {"attributes": {"last_analysis_stats": {"malicious": 2},
+                                      "last_analysis_results": {"Fortinet": {"category": "malicious"},
+                                                                "BitDefender": {"category": "malicious"},
+                                                                "Avira": {"category": "harmless"}},
+                                      "last_analysis_date": 1760400000}}}
+        out = summarize_virustotal(vt)
+        self.assertIn("Flagged by: BitDefender, Fortinet", out)
+        self.assertIn("Last analysed: 2025-10-14", out)
+
     def test_summarize_virustotal(self):
         vt = {"data": {"attributes": {"last_analysis_stats": {"malicious": 2, "harmless": 70},
                                       "as_owner": "Example AS", "country": "TR", "whois": "x" * 9000}}}

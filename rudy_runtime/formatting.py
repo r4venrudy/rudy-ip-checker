@@ -2,6 +2,7 @@
 
 import ipaddress
 import re
+from datetime import datetime, timezone
 
 DISCORD_MESSAGE_LIMIT=2000
 
@@ -57,6 +58,13 @@ def summarize_virustotal(vt):
     for key,label in (("reputation","Reputation"),("as_owner","AS owner"),("asn","ASN"),("country","Country"),("network","Network")):
         if a.get(key) not in (None,""):
             out.append(f"{label}: {a[key]}")
+    if st.get('malicious'):
+        # which engines flagged it is more useful than the count alone
+        engines=[name for name,r in (a.get("last_analysis_results") or {}).items() if r.get("category")=="malicious"]
+        if engines:
+            out.append("Flagged by: "+", ".join(sorted(engines)[:8])+(f" (+{len(engines)-8} more)" if len(engines)>8 else ""))
+    if isinstance(a.get("last_analysis_date"),int):
+        out.append("Last analysed: "+datetime.fromtimestamp(a["last_analysis_date"],timezone.utc).strftime("%Y-%m-%d"))
     return out
 
 def summarize_shodan(host):
