@@ -24,6 +24,7 @@ A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal
 | VirusTotal | Retrieves IP-address attributes through the v3 API |
 | RDAP | Network name, range, country, owner and abuse contact via rdap.org |
 | Tor Project | Checks the exit-address list (IPv4 only, cached 30 minutes) |
+| AbuseIPDB | Optional: abuse confidence, report count and usage type when `ABUSEIPDB_KEY` is set |
 | Discord | Registers `/ip` and splits long text responses |
 
 ## Quick start

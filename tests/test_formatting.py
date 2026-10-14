@@ -1,6 +1,6 @@
 import unittest
 
-from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_rdap, summarize_shodan, summarize_virustotal, validate_ip
+from rudy_runtime.formatting import canonical_ip, clean_banner, split_message, summarize_abuseipdb, summarize_rdap, summarize_shodan, summarize_virustotal, validate_ip
 
 
 class FormattingTests(unittest.TestCase):
@@ -87,3 +87,17 @@ class RdapSummaryTests(unittest.TestCase):
 
     def test_sparse_object(self):
         self.assertEqual(summarize_rdap({"entities": [{"roles": ["abuse"]}]}), [])
+
+
+class AbuseIpdbSummaryTests(unittest.TestCase):
+    def test_report(self):
+        report = {"data": {"abuseConfidenceScore": 87, "totalReports": 42, "lastReportedAt": "2026-10-12T08:00:00+00:00",
+                           "usageType": "Data Center/Web Hosting/Transit"}}
+        self.assertEqual(summarize_abuseipdb(report), [
+            "AbuseIPDB: 87% abuse confidence, 42 reports in 90 days",
+            "Last reported: 2026-10-12",
+            "Usage type: Data Center/Web Hosting/Transit",
+        ])
+
+    def test_empty(self):
+        self.assertEqual(summarize_abuseipdb({}), ["AbuseIPDB: no data"])

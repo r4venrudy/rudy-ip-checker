@@ -103,3 +103,15 @@ def summarize_rdap(rdap):
     if abuse:
         out.append(f"Abuse contact: {abuse}")
     return out
+
+def summarize_abuseipdb(report):
+    """Abuse confidence, report count and usage type from an AbuseIPDB v2 /check response."""
+    d=report.get("data") or {}
+    if "abuseConfidenceScore" not in d:
+        return ["AbuseIPDB: no data"]
+    out=[f"AbuseIPDB: {d['abuseConfidenceScore']}% abuse confidence, {d.get('totalReports',0)} reports in 90 days"]
+    if d.get("lastReportedAt"):
+        out.append(f"Last reported: {d['lastReportedAt'][:10]}")
+    if d.get("usageType"):
+        out.append(f"Usage type: {d['usageType']}")
+    return out

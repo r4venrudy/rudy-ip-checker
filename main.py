@@ -35,7 +35,7 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
-from rudy_runtime.formatting import canonical_ip, split_message, summarize_rdap, summarize_shodan, summarize_virustotal
+from rudy_runtime.formatting import canonical_ip, split_message, summarize_abuseipdb, summarize_rdap, summarize_shodan, summarize_virustotal
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
@@ -110,6 +110,20 @@ class AClient(discord.Client):
             r.raise_for_status()
             return await r.json()
 
+    async def get_abuseipdb(self,ip):
+        # optional source: only queried when ABUSEIPDB_KEY is set
+        key=os.environ.get("ABUSEIPDB_KEY")
+        if not key:
+            return None
+        params={'ipAddress':ip,'maxAgeInDays':'90'}
+        async with self.session.get("https://api.abuseipdb.com/api/v2/check",params=params,headers={'Key':key,'Accept':'application/json'}) as r:
+            if r.status in (401,403):
+                raise RuntimeError("AbuseIPDB rejected the API key")
+            if r.status==429:
+                raise RuntimeError("AbuseIPDB daily limit reached")
+            r.raise_for_status()
+            return await r.json()
+
     async def send_split_messages(self,i,m):
         chunks=split_message(m)
         if not i.response.is_done():
@@ -161,11 +175,12 @@ def run_discord_bot(token,shodan_key,virustotal_key):
                 info.append(f"{name}: lookup failed")
                 return None
         # the four sources are independent, so query them at the same time
-        s,tor,w,vt=await asyncio.gather(
+        s,tor,w,vt,ab=await asyncio.gather(
             section("Shodan",c.fetch_shodan_host_info(ip)),
             section("Tor",c.get_tor_exit_nodes()),
             section("WHOIS",c.fetch_rdap(ip)),
             section("VirusTotal",c.get_virustotal_data(ip)),
+            section("AbuseIPDB",c.get_abuseipdb(ip)),
         )
         if s is None:
             if "Shodan: lookup failed" not in info:
@@ -180,6 +195,8 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             info.extend(summarize_rdap(w))
         if vt:
             info.extend(summarize_virustotal(vt))
+        if ab:
+            info.extend(summarize_abuseipdb(ab))
         await c.send_split_messages(interaction,"\n".join(info))
 
     c.run(token)
