@@ -74,6 +74,8 @@ class AClient(discord.Client):
                 return None
             if r.status in (401,403):
                 raise RuntimeError("Shodan rejected the API key")
+            if r.status==429:
+                raise RuntimeError("Shodan rate limit reached")
             r.raise_for_status()
             return await r.json()
 
