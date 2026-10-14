@@ -51,6 +51,7 @@ class AClient(discord.Client):
         self.virustotal_key=virustotal_key
         self.session=None
         self.tor_cache=None
+        self.tor_lock=asyncio.Lock()
         self.tree=discord.app_commands.CommandTree(self)
         self.rate_limiter=asyncio.Semaphore(RATE_LIMIT)
 
@@ -82,7 +83,12 @@ class AClient(discord.Client):
             return await r.text()
 
     async def get_tor_exit_nodes(self):
-        # the exit list is ~1 MB and changes slowly, so reuse it for 30 minutes
+        # the exit list is ~1 MB and changes slowly, so reuse it for 30 minutes;
+        # the lock makes lookups that arrive together share one download
+        async with self.tor_lock:
+            return await self._tor_exit_nodes()
+
+    async def _tor_exit_nodes(self):
         now=asyncio.get_running_loop().time()
         if self.tor_cache and now-self.tor_cache[0]<1800:
             return self.tor_cache[1]
