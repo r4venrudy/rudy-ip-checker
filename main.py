@@ -35,7 +35,11 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
+from rudy_runtime.cooldown import Cooldown
 from rudy_runtime.formatting import canonical_ip, split_message, summarize_abuseipdb, summarize_rdap, summarize_shodan, summarize_virustotal
+
+# VirusTotal's free tier allows 4 requests a minute, so space out each user's lookups
+cooldown=Cooldown(int(os.environ.get("COOLDOWN_SECONDS","15") or 0))
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})
@@ -160,6 +164,10 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             return
         if not ipaddress.ip_address(ip).is_global:
             await interaction.response.send_message("That is a private or reserved address; public sources have no data for it.",ephemeral=True)
+            return
+        wait=cooldown.take(interaction.user.id)
+        if wait:
+            await interaction.response.send_message(f"Please wait {int(wait)+1} seconds before the next lookup.",ephemeral=True)
             return
         await interaction.response.defer(ephemeral=False)
         async with c.rate_limiter:

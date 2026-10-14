@@ -79,7 +79,7 @@ AS owner: GOOGLE
 Country: US
 ```
 
-Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `lookup failed` while the others still answer. Up to 5 lookups run at once.
+Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `lookup failed` while the others still answer. Up to 5 lookups run at once, and each user waits `COOLDOWN_SECONDS` (default 15) between lookups so the API quotas last.
 
 ## Project map
 
