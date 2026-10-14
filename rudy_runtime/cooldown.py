@@ -3,6 +3,16 @@
 import time
 
 
+def seconds_from_env(value, default):
+    """Parse COOLDOWN_SECONDS: empty means the default, negative or invalid falls back to the default too,
+    so a typo in the environment cannot stop the bot from starting."""
+    try:
+        seconds = int(value) if value not in (None, "") else default
+    except ValueError:
+        return default
+    return seconds if seconds >= 0 else default
+
+
 class Cooldown:
     def __init__(self, seconds, clock=time.monotonic):
         self.seconds = seconds

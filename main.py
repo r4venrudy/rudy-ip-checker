@@ -35,11 +35,11 @@ logging.basicConfig(
 )
 
 from rudy_runtime.config import load_config as load_runtime_config
-from rudy_runtime.cooldown import Cooldown
+from rudy_runtime.cooldown import Cooldown, seconds_from_env
 from rudy_runtime.formatting import build_report, canonical_ip, split_message
 
 # VirusTotal's free tier allows 4 requests a minute, so space out each user's lookups
-cooldown=Cooldown(int(os.environ.get("COOLDOWN_SECONDS","15") or 0))
+cooldown=Cooldown(seconds_from_env(os.environ.get("COOLDOWN_SECONDS"),15))
 
 def load_config():
     return load_runtime_config({'TOKEN':'DISCORD_TOKEN','SHODAN_KEY':'SHODAN_KEY','VIRUSTOTAL_API_KEY':'VIRUSTOTAL_API_KEY'})

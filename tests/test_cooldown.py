@@ -1,6 +1,6 @@
 import unittest
 
-from rudy_runtime.cooldown import Cooldown
+from rudy_runtime.cooldown import Cooldown, seconds_from_env
 
 
 class CooldownTests(unittest.TestCase):
@@ -18,3 +18,13 @@ class CooldownTests(unittest.TestCase):
         cd = Cooldown(0, clock=lambda: 5.0)
         self.assertEqual(cd.take(1), 0)
         self.assertEqual(cd.take(1), 0)
+
+
+class SecondsFromEnvTests(unittest.TestCase):
+    def test_values(self):
+        self.assertEqual(seconds_from_env("45", 30), 45)
+        self.assertEqual(seconds_from_env("0", 30), 0)
+        self.assertEqual(seconds_from_env("", 30), 30)
+        self.assertEqual(seconds_from_env(None, 30), 30)
+        self.assertEqual(seconds_from_env("thirty", 30), 30)
+        self.assertEqual(seconds_from_env("-5", 30), 30)
