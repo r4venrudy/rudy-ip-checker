@@ -133,6 +133,11 @@ def summarize_abuseipdb(report):
         out.append(f"Last reported: {d['lastReportedAt'][:10]}")
     if d.get("usageType"):
         out.append(f"Usage type: {d['usageType']}")
+    if d.get("domain"):
+        out.append(f"Domain: {escape_md(d['domain'])}")
+    # whitelisted means AbuseIPDB treats it as a known-good service (big DNS resolvers, crawlers)
+    if d.get("isWhitelisted"):
+        out.append("Whitelisted by AbuseIPDB")
     return out
 
 def build_report(ip,results,failed):

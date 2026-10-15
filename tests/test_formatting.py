@@ -150,3 +150,9 @@ class ShodanTagsTests(unittest.TestCase):
     def test_tags_and_last_scan(self):
         lines=summarize_shodan({"tags":["vpn","self-signed"],"last_update":"2026-10-01T08:15:22.123456"})
         self.assertEqual(lines,["Tags: vpn, self-signed","Last scanned by Shodan: 2026-10-01"])
+
+
+class AbuseIpdbExtraTests(unittest.TestCase):
+    def test_domain_and_whitelist(self):
+        lines=summarize_abuseipdb({"data":{"abuseConfidenceScore":0,"totalReports":3,"domain":"google.com","isWhitelisted":True}})
+        self.assertEqual(lines[-2:],["Domain: google.com","Whitelisted by AbuseIPDB"])
