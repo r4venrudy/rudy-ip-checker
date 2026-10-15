@@ -46,7 +46,9 @@ def load_config():
 
 class AClient(discord.Client):
     def __init__(self,shodan_key,virustotal_key):
-        super().__init__(intents=discord.Intents.default())
+        # replies quote Shodan banners, hostnames and RDAP names chosen by whoever runs the target,
+        # so "@everyone" or a role mention in them must never ping anyone
+        super().__init__(intents=discord.Intents.default(),allowed_mentions=discord.AllowedMentions.none())
         self.shodan_key=shodan_key
         self.virustotal_key=virustotal_key
         self.session=None
