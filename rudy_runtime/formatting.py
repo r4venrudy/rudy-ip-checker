@@ -79,6 +79,11 @@ def summarize_shodan(host):
     for key,label in (("org","Organization"),("isp","ISP"),("os","OS")):
         if host.get(key):
             out.append(f"{label}: {escape_md(host[key])}")
+    if host.get("tags"):
+        # Shodan's own labels: vpn, tor, cloud, honeypot, self-signed, compromised...
+        out.append("Tags: "+", ".join(escape_md(t) for t in host["tags"][:8]))
+    if host.get("last_update"):
+        out.append(f"Last scanned by Shodan: {str(host['last_update'])[:10]}")
     if host.get("hostnames"):
         out.append("Hostnames: "+", ".join(escape_md(h) for h in host["hostnames"][:5]))
     vulns=host.get("vulns") or []

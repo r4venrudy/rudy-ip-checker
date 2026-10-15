@@ -144,3 +144,9 @@ class VirusTotalNoDataTests(unittest.TestCase):
     def test_unknown_address_says_no_data(self):
         report=build_report("203.0.113.9",{"VirusTotal":None},set())
         self.assertEqual(report,"**VirusTotal**\nNo data for this address")
+
+
+class ShodanTagsTests(unittest.TestCase):
+    def test_tags_and_last_scan(self):
+        lines=summarize_shodan({"tags":["vpn","self-signed"],"last_update":"2026-10-01T08:15:22.123456"})
+        self.assertEqual(lines,["Tags: vpn, self-signed","Last scanned by Shodan: 2026-10-01"])

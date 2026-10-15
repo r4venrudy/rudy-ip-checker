@@ -20,7 +20,7 @@ A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal
 
 | Source | Implemented behavior |
 | :--- | :--- |
-| Shodan | Organization, ISP, OS, hostnames, known CVEs, then open ports with banners |
+| Shodan | Organization, ISP, OS, tags (vpn, cloud, honeypot…), last scan date, hostnames, known CVEs, then open ports with banners |
 | VirusTotal | Detection counts, reputation, AS owner, the engines that flagged the address and the last analysis date (v3 API) |
 | RDAP | Network name, range, country, owner and abuse contact via rdap.org |
 | Tor Project | Checks the exit-address list (IPv4 only, cached 30 minutes) |
