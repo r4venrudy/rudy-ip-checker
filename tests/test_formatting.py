@@ -121,3 +121,11 @@ class BuildReportTests(unittest.TestCase):
 
     def test_ipv6_tor_note(self):
         self.assertIn("only has IPv4", build_report("2001:db8::1", {"Tor": set()}, set()))
+
+
+class MarkdownEscapeTests(unittest.TestCase):
+    def test_external_text_cannot_format_the_reply(self):
+        lines=summarize_shodan({"org":"**Evil** Corp","hostnames":["a_b_c.example"],"data":[{"port":80,"data":"Server: `x` ~~y~~"}]})
+        self.assertEqual(lines[0],"Organization: \\*\\*Evil\\*\\* Corp")
+        self.assertEqual(lines[1],"Hostnames: a\\_b\\_c.example")
+        self.assertEqual(lines[2],"Port 80/tcp - Server: \\`x\\` \\~\\~y\\~\\~")

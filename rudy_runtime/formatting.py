@@ -13,6 +13,10 @@ def canonical_ip(text):
     except ValueError:
         return None
 
+def escape_md(text):
+    """Escape Discord markdown in text from external sources (banners, hostnames, registry names)."""
+    return re.sub(r"([\\*_~`|])",r"\\\1",str(text))
+
 def clean_banner(banner):
     """Strip HTML tags and collapse whitespace so a service banner fits on one line (max 100 chars)."""
     banner=re.sub(r'<[^>]+>','',banner)
@@ -64,16 +68,16 @@ def summarize_shodan(host):
     out=[]
     for key,label in (("org","Organization"),("isp","ISP"),("os","OS")):
         if host.get(key):
-            out.append(f"{label}: {host[key]}")
+            out.append(f"{label}: {escape_md(host[key])}")
     if host.get("hostnames"):
-        out.append("Hostnames: "+", ".join(host["hostnames"][:5]))
+        out.append("Hostnames: "+", ".join(escape_md(h) for h in host["hostnames"][:5]))
     vulns=host.get("vulns") or []
     if vulns:
         shown=sorted(vulns)[:5]
         more=f" (+{len(vulns)-5} more)" if len(vulns)>5 else ""
         out.append(f"Known CVEs: {', '.join(shown)}{more}")
     for d in sorted(host.get("data",[]),key=lambda d:d.get("port",0)):
-        out.append(f"Port {d.get('port')}/{d.get('transport','tcp')} - {clean_banner(d.get('data',''))}")
+        out.append(f"Port {d.get('port')}/{d.get('transport','tcp')} - {escape_md(clean_banner(d.get('data','')))}")
     return out
 
 def _vcard(entity,field):
@@ -87,7 +91,7 @@ def summarize_rdap(rdap):
     """Network name, address range, country, owner and abuse contact from an RDAP IP network object (RFC 9083)."""
     out=[]
     if rdap.get("name"):
-        out.append(f"Network: {rdap['name']}"+(f" ({rdap['handle']})" if rdap.get("handle") else ""))
+        out.append(f"Network: {escape_md(rdap['name'])}"+(f" ({escape_md(rdap['handle'])})" if rdap.get("handle") else ""))
     if rdap.get("startAddress") and rdap.get("endAddress"):
         out.append(f"Range: {rdap['startAddress']} - {rdap['endAddress']}")
     if rdap.get("country"):
@@ -98,7 +102,7 @@ def summarize_rdap(rdap):
         entities.extend(e.get("entities",[]))
     owner=next((_vcard(e,"fn") for e in entities if "registrant" in e.get("roles",[]) and _vcard(e,"fn")),None)
     if owner:
-        out.append(f"Owner: {owner}")
+        out.append(f"Owner: {escape_md(owner)}")
     abuse=next((_vcard(e,"email") for e in entities if "abuse" in e.get("roles",[]) and _vcard(e,"email")),None)
     if abuse:
         out.append(f"Abuse contact: {abuse}")
