@@ -138,3 +138,9 @@ class HostnameTests(unittest.TestCase):
         self.assertEqual(hostname_from("mail.example.com.tr."),"mail.example.com.tr")
         for bad in ("", "localhost", "8.8.8.8", "exa mple.com", "-x.example.com"):
             self.assertIsNone(hostname_from(bad),bad)
+
+
+class VirusTotalNoDataTests(unittest.TestCase):
+    def test_unknown_address_says_no_data(self):
+        report=build_report("203.0.113.9",{"VirusTotal":None},set())
+        self.assertEqual(report,"**VirusTotal**\nNo data for this address")

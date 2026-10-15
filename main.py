@@ -122,6 +122,8 @@ class AClient(discord.Client):
                 raise RuntimeError("VirusTotal rejected the API key")
             if r.status==429:
                 raise RuntimeError("VirusTotal quota exceeded")
+            if r.status==404:
+                return None  # VirusTotal has never seen this address
             r.raise_for_status()
             return await r.json()
 
