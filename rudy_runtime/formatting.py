@@ -9,9 +9,13 @@ DISCORD_MESSAGE_LIMIT=2000
 def canonical_ip(text):
     """Canonical string for an IP ("2001:DB8::0001" -> "2001:db8::1", " 8.8.8.8 " -> "8.8.8.8"), or None if invalid."""
     try:
-        return str(ipaddress.ip_address((text or "").strip()))
+        addr=ipaddress.ip_address((text or "").strip())
     except ValueError:
         return None
+    # "::ffff:8.8.8.8" (an IPv4 address written as IPv6, as some logs do) is really 8.8.8.8
+    if addr.version==6 and addr.ipv4_mapped:
+        addr=addr.ipv4_mapped
+    return str(addr)
 
 def escape_md(text):
     """Escape Discord markdown in text from external sources (banners, hostnames, registry names)."""

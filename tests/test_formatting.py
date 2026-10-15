@@ -7,6 +7,7 @@ class FormattingTests(unittest.TestCase):
     def test_canonical_ip(self):
         self.assertEqual(canonical_ip(" 8.8.8.8 "), "8.8.8.8")
         self.assertEqual(canonical_ip("2001:DB8::0001"), "2001:db8::1")
+        self.assertEqual(canonical_ip("::ffff:8.8.8.8"),"8.8.8.8")
         self.assertIsNone(canonical_ip("8.8.8"))
         self.assertIsNone(canonical_ip("999.1.1.1"))
         self.assertIsNone(canonical_ip("example.com"))
