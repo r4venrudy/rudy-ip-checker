@@ -129,3 +129,12 @@ class MarkdownEscapeTests(unittest.TestCase):
         self.assertEqual(lines[0],"Organization: \\*\\*Evil\\*\\* Corp")
         self.assertEqual(lines[1],"Hostnames: a\\_b\\_c.example")
         self.assertEqual(lines[2],"Port 80/tcp - Server: \\`x\\` \\~\\~y\\~\\~")
+
+
+class HostnameTests(unittest.TestCase):
+    def test_hostnames_are_cleaned_and_validated(self):
+        from rudy_runtime.formatting import hostname_from
+        self.assertEqual(hostname_from(" https://Example.com:8443/path "),"example.com")
+        self.assertEqual(hostname_from("mail.example.com.tr."),"mail.example.com.tr")
+        for bad in ("", "localhost", "8.8.8.8", "exa mple.com", "-x.example.com"):
+            self.assertIsNone(hostname_from(bad),bad)

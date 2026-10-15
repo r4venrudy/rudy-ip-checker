@@ -6,6 +6,7 @@ import discord
 import aiohttp
 import asyncio
 import ipaddress
+import socket
 
 def raven_fail():
     print("Kabul etmesende mahçupsun - r4ven.leet. Fotoğrafımı geri yükle")
@@ -36,7 +37,7 @@ logging.basicConfig(
 
 from rudy_runtime.config import load_config as load_runtime_config
 from rudy_runtime.cooldown import Cooldown, seconds_from_env
-from rudy_runtime.formatting import build_report, canonical_ip, split_message
+from rudy_runtime.formatting import build_report, canonical_ip, hostname_from, split_message
 
 # VirusTotal's free tier allows 4 requests a minute, so space out each user's lookups
 cooldown=Cooldown(seconds_from_env(os.environ.get("COOLDOWN_SECONDS"),15))
@@ -179,12 +180,22 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             pass
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
-    @discord.app_commands.describe(ip="IPv4 or IPv6 address, e.g. 8.8.8.8 or 2606:4700:4700::1111")
+    @discord.app_commands.describe(ip="IPv4 or IPv6 address or a hostname, e.g. 8.8.8.8 or example.com")
     async def ip(interaction:discord.Interaction,ip:str):
         # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
-        ip=canonical_ip(ip)
+        given=ip
+        ip=canonical_ip(given)
+        host=None if ip else hostname_from(given)
+        if host:
+            # a domain was given: look up the address it points to (Discord wants a reply within 3 s)
+            try:
+                infos=await asyncio.wait_for(asyncio.get_running_loop().getaddrinfo(host,None,type=socket.SOCK_STREAM),2)
+                ip=canonical_ip(sorted(infos,key=lambda i:i[0]!=socket.AF_INET)[0][4][0])
+            except (OSError,asyncio.TimeoutError,IndexError):
+                await interaction.response.send_message(f"Could not resolve {host} to an address.",ephemeral=True)
+                return
         if ip is None:
-            await interaction.response.send_message("Invalid IP address.",ephemeral=True)
+            await interaction.response.send_message("Invalid IP address or hostname.",ephemeral=True)
             return
         if not ipaddress.ip_address(ip).is_global:
             await interaction.response.send_message("That is a private or reserved address; public sources have no data for it.",ephemeral=True)
@@ -195,9 +206,9 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             return
         await interaction.response.defer(ephemeral=False)
         async with c.rate_limiter:
-            await run_lookup(interaction,ip)
+            await run_lookup(interaction,ip,host)
 
-    async def run_lookup(interaction,ip):
+    async def run_lookup(interaction,ip,host=None):
         results,failed={},set()
         async def section(name,coro):
             try:
@@ -215,7 +226,10 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             sources.append(("AbuseIPDB",c.get_abuseipdb(ip)))
         # the sources are independent, so query them at the same time
         await asyncio.gather(*(section(name,coro) for name,coro in sources))
-        await c.send_split_messages(interaction,build_report(ip,results,failed))
+        report=build_report(ip,results,failed)
+        if host:
+            report=f"{host} resolves to {ip}\n\n{report}"
+        await c.send_split_messages(interaction,report)
 
     c.run(token)
 

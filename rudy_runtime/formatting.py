@@ -17,6 +17,16 @@ def escape_md(text):
     """Escape Discord markdown in text from external sources (banners, hostnames, registry names)."""
     return re.sub(r"([\\*_~`|])",r"\\\1",str(text))
 
+_HOSTNAME=re.compile(r"(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
+
+def hostname_from(text):
+    """"https://Example.com/path" or "example.com." -> "example.com"; None when it is not a hostname."""
+    host=(text or "").strip().lower()
+    if "://" in host:
+        host=host.split("://",1)[1]
+    host=host.split("/",1)[0].split(":",1)[0].rstrip(".")
+    return host if _HOSTNAME.fullmatch(host) else None
+
 def clean_banner(banner):
     """Strip HTML tags and collapse whitespace so a service banner fits on one line (max 100 chars)."""
     banner=re.sub(r'<[^>]+>','',banner)
