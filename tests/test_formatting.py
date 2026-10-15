@@ -163,3 +163,9 @@ class RdapEventTests(unittest.TestCase):
         lines=summarize_rdap({"events":[{"eventAction":"registration","eventDate":"2014-03-14T10:00:00-04:00"},
                                         {"eventAction":"last changed","eventDate":"2024-01-02T00:00:00Z"}]})
         self.assertEqual(lines,["Registered: 2014-03-14","Last changed: 2024-01-02"])
+
+
+class Ipv6TorFromAbuseIpdbTests(unittest.TestCase):
+    def test_abuseipdb_answers_for_ipv6(self):
+        results={"Tor":set(),"AbuseIPDB":{"data":{"abuseConfidenceScore":100,"isTor":True}}}
+        self.assertIn("**Tor**\nExit node: Yes (from AbuseIPDB)",build_report("2001:db8::1",results,set()))

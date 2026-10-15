@@ -153,10 +153,17 @@ def build_report(ip,results,failed):
     sources whose lookup raised. Sources that were skipped (no API key) are left out entirely.
     """
     tor_ipv6=ipaddress.ip_address(ip).version==6
+    # the exit list is IPv4 only, but AbuseIPDB (when configured) knows IPv6 exits too
+    abuse_tor=((results.get("AbuseIPDB") or {}).get("data") or {}).get("isTor")
+    def tor_lines(r):
+        if tor_ipv6:
+            if isinstance(abuse_tor,bool):
+                return [f"Exit node: {'Yes' if abuse_tor else 'No'} (from AbuseIPDB)"]
+            return ["Not checked (the public exit list only has IPv4 addresses)"]
+        return ["Exit node: Yes" if ip in r else "Exit node: No"] if r is not None else []
     order=(
         ("Shodan",lambda r:summarize_shodan(r) if r else ["No data for this address"]),
-        ("Tor",lambda r:["Not checked (the public exit list only has IPv4 addresses)"] if tor_ipv6
-            else ["Exit node: Yes" if ip in r else "Exit node: No"] if r is not None else []),
+        ("Tor",tor_lines),
         ("WHOIS",lambda r:summarize_rdap(r) if r else ["No registry data"]),
         ("VirusTotal",lambda r:summarize_virustotal(r) if r else ["No data for this address"]),
         ("AbuseIPDB",lambda r:summarize_abuseipdb(r) if r else []),

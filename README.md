@@ -23,7 +23,7 @@ A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal
 | Shodan | Organization, ISP, OS, tags (vpn, cloud, honeypot…), last scan date, hostnames, known CVEs, then open ports with banners |
 | VirusTotal | Detection counts, reputation, AS owner, the engines that flagged the address and the last analysis date (v3 API) |
 | RDAP | Network name, range, country, registration and last-change dates, owner and abuse contact via rdap.org |
-| Tor Project | Checks the exit-address list (IPv4 only, cached 30 minutes) |
+| Tor Project | Checks the exit-address list (IPv4 only, cached 30 minutes); for IPv6 the AbuseIPDB `isTor` flag is used when that source is configured |
 | AbuseIPDB | Optional: abuse confidence, report count, usage type, domain and whitelist status when `ABUSEIPDB_KEY` is set |
 | Discord | Registers `/ip`, splits long text responses, escapes markdown in external text and never sends mentions (a banner with `@everyone` pings no one) |
 
