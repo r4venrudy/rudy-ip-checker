@@ -156,3 +156,10 @@ class AbuseIpdbExtraTests(unittest.TestCase):
     def test_domain_and_whitelist(self):
         lines=summarize_abuseipdb({"data":{"abuseConfidenceScore":0,"totalReports":3,"domain":"google.com","isWhitelisted":True}})
         self.assertEqual(lines[-2:],["Domain: google.com","Whitelisted by AbuseIPDB"])
+
+
+class RdapEventTests(unittest.TestCase):
+    def test_registration_and_change_dates(self):
+        lines=summarize_rdap({"events":[{"eventAction":"registration","eventDate":"2014-03-14T10:00:00-04:00"},
+                                        {"eventAction":"last changed","eventDate":"2024-01-02T00:00:00Z"}]})
+        self.assertEqual(lines,["Registered: 2014-03-14","Last changed: 2024-01-02"])

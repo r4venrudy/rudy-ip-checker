@@ -111,6 +111,12 @@ def summarize_rdap(rdap):
         out.append(f"Range: {rdap['startAddress']} - {rdap['endAddress']}")
     if rdap.get("country"):
         out.append(f"Registered country: {rdap['country']}")
+    # when the block was allocated and last changed; a fresh allocation is common for throwaway hosting
+    for e in rdap.get("events") or []:
+        if e.get("eventAction")=="registration" and e.get("eventDate"):
+            out.append(f"Registered: {str(e['eventDate'])[:10]}")
+        elif e.get("eventAction")=="last changed" and e.get("eventDate"):
+            out.append(f"Last changed: {str(e['eventDate'])[:10]}")
     entities=list(rdap.get("entities",[]))
     # abuse contacts are usually nested under the registrant entity
     for e in list(entities):
