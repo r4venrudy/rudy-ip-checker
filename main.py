@@ -218,9 +218,12 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             except Exception as e:
                 logging.warning("%s lookup failed for %s: %s",name,ip,e)
                 failed.add(name)
+        async def no_tor_list():
+            return None
         sources=[
             ("Shodan",c.fetch_shodan_host_info(ip)),
-            ("Tor",c.get_tor_exit_nodes()),
+            # the exit list only holds IPv4 addresses, so don't download ~1 MB for an IPv6 lookup
+            ("Tor",c.get_tor_exit_nodes() if ipaddress.ip_address(ip).version==4 else no_tor_list()),
             ("WHOIS",c.fetch_rdap(ip)),
             ("VirusTotal",c.get_virustotal_data(ip)),
         ]
