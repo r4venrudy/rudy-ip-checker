@@ -150,6 +150,19 @@ def summarize_abuseipdb(report):
         out.append("Whitelisted by AbuseIPDB")
     return out
 
+def summarize_greynoise(report):
+    """Whether GreyNoise saw the address mass-scanning (noise) or knows it as a benign service (riot)."""
+    if report.get("riot"):
+        return [f"Known benign service: {escape_md(report.get('name') or 'yes')}"]
+    if report.get("noise"):
+        out=[f"Seen scanning the internet: {escape_md(report.get('classification') or 'unknown')}"]
+        if report.get("name") and report["name"]!="unknown":
+            out[0]+=f" ({escape_md(report['name'])})"
+        if report.get("last_seen"):
+            out.append(f"Last seen: {str(report['last_seen'])[:10]}")
+        return out
+    return ["Not seen scanning the internet"]
+
 def build_report(ip,results,failed):
     """Group the /ip output by source, in a fixed order, with a bold header per source.
 
@@ -171,6 +184,7 @@ def build_report(ip,results,failed):
         ("WHOIS",lambda r:summarize_rdap(r) if r else ["No registry data"]),
         ("VirusTotal",lambda r:summarize_virustotal(r) if r else ["No data for this address"]),
         ("AbuseIPDB",lambda r:summarize_abuseipdb(r) if r else []),
+        ("GreyNoise",lambda r:summarize_greynoise(r) if r else []),
     )
     out=[]
     for name,fmt in order:

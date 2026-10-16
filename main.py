@@ -141,6 +141,18 @@ class AClient(discord.Client):
             r.raise_for_status()
             return await r.json()
 
+    async def get_greynoise(self,ip):
+        # optional source: GreyNoise's community API says whether an address mass-scans the internet
+        # (noise) or belongs to a known-good service (riot). On with GREYNOISE=1 or GREYNOISE_KEY.
+        headers={'key':os.environ["GREYNOISE_KEY"]} if os.environ.get("GREYNOISE_KEY") else {}
+        async with self.session.get(f"https://api.greynoise.io/v3/community/{ip}",headers=headers) as r:
+            if r.status==404:
+                return {"noise":False,"riot":False}  # not seen scanning and not a known service
+            if r.status==429:
+                raise RuntimeError("GreyNoise daily limit reached")
+            r.raise_for_status()
+            return await r.json()
+
     async def send_split_messages(self,i,m):
         chunks=split_message(m)
         if not i.response.is_done():
@@ -229,6 +241,8 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         ]
         if os.environ.get("ABUSEIPDB_KEY"):
             sources.append(("AbuseIPDB",c.get_abuseipdb(ip)))
+        if os.environ.get("GREYNOISE_KEY") or os.environ.get("GREYNOISE")=="1":
+            sources.append(("GreyNoise",c.get_greynoise(ip)))
         # the sources are independent, so query them at the same time
         await asyncio.gather(*(section(name,coro) for name,coro in sources))
         report=build_report(ip,results,failed)

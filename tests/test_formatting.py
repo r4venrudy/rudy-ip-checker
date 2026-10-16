@@ -170,3 +170,13 @@ class Ipv6TorFromAbuseIpdbTests(unittest.TestCase):
     def test_abuseipdb_answers_for_ipv6(self):
         results={"Tor":set(),"AbuseIPDB":{"data":{"abuseConfidenceScore":100,"isTor":True}}}
         self.assertIn("**Tor**\nExit node: Yes (from AbuseIPDB)",build_report("2001:db8::1",results,set()))
+
+
+class GreyNoiseTests(unittest.TestCase):
+    def test_summaries(self):
+        from rudy_runtime.formatting import summarize_greynoise
+        self.assertEqual(summarize_greynoise({"riot":True,"name":"Google Public DNS"}),["Known benign service: Google Public DNS"])
+        self.assertEqual(summarize_greynoise({"noise":True,"classification":"malicious","name":"unknown","last_seen":"2026-10-14"}),
+                         ["Seen scanning the internet: malicious","Last seen: 2026-10-14"])
+        self.assertEqual(summarize_greynoise({"noise":False,"riot":False}),["Not seen scanning the internet"])
+        self.assertIn("**GreyNoise**",build_report("203.0.113.5",{"GreyNoise":{"noise":False,"riot":False}},set()))

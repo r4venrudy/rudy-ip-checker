@@ -25,6 +25,7 @@ A Discord slash-command bot that gathers IP observations from Shodan, VirusTotal
 | RDAP | Network name, range, country, registration and last-change dates, owner and abuse contact via rdap.org |
 | Tor Project | Checks the exit-address list (IPv4 only, cached 30 minutes); for IPv6 the AbuseIPDB `isTor` flag is used when that source is configured |
 | AbuseIPDB | Optional: abuse confidence, report count, usage type, domain and whitelist status when `ABUSEIPDB_KEY` is set |
+| GreyNoise | Optional: whether the address mass-scans the internet (and how GreyNoise classifies it) or is a known benign service; on with `GREYNOISE=1` or `GREYNOISE_KEY` |
 | Discord | Registers `/ip`, splits long text responses, escapes markdown in external text and never sends mentions (a banner with `@everyone` pings no one) |
 
 ## Quick start
