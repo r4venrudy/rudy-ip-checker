@@ -52,7 +52,7 @@ Create a local `config.json` using your own credentials:
 python main.py
 ```
 
-Invite the bot with the `bot` and `applications.commands` scopes and permission to view/send messages. Use `/ip 8.8.8.8` in Discord; a hostname such as `/ip example.com` is resolved first and the report names the address it used.
+Invite the bot with the `bot` and `applications.commands` scopes and permission to view/send messages. Use `/ip 8.8.8.8` in Discord; a hostname such as `/ip example.com` is resolved first and the report names the address it used. Add `private:True` to get the report as a message only you can see.
 
 ## Implementation notes
 

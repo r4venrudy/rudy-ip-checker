@@ -153,13 +153,13 @@ class AClient(discord.Client):
             r.raise_for_status()
             return await r.json()
 
-    async def send_split_messages(self,i,m):
+    async def send_split_messages(self,i,m,private=False):
         chunks=split_message(m)
         if not i.response.is_done():
-            await i.response.defer(ephemeral=False)
-        await i.followup.send(chunks[0])
-        for c in chunks[1:]:
-            await i.followup.send(c)
+            await i.response.defer(ephemeral=private)
+        # each follow-up needs the flag itself; only the first one inherits it from the deferred reply
+        for c in chunks:
+            await i.followup.send(c,ephemeral=private)
 
 def run_discord_bot(token,shodan_key,virustotal_key):
     c=AClient(shodan_key,virustotal_key)
@@ -194,8 +194,9 @@ def run_discord_bot(token,shodan_key,virustotal_key):
             pass
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
-    @discord.app_commands.describe(ip="IPv4 or IPv6 address or a hostname, e.g. 8.8.8.8 or example.com")
-    async def ip(interaction:discord.Interaction,ip:str):
+    @discord.app_commands.describe(ip="IPv4 or IPv6 address or a hostname, e.g. 8.8.8.8 or example.com",
+                                   private="Show the report only to you (default: everyone in the channel)")
+    async def ip(interaction:discord.Interaction,ip:str,private:bool=False):
         # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
         given=ip
         ip=canonical_ip(given)
@@ -218,11 +219,11 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         if wait:
             await interaction.response.send_message(f"Please wait {int(wait)+1} seconds before the next lookup.",ephemeral=True)
             return
-        await interaction.response.defer(ephemeral=False)
+        await interaction.response.defer(ephemeral=private)
         async with c.rate_limiter:
-            await run_lookup(interaction,ip,host)
+            await run_lookup(interaction,ip,host,private)
 
-    async def run_lookup(interaction,ip,host=None):
+    async def run_lookup(interaction,ip,host=None,private=False):
         results,failed={},set()
         async def section(name,coro):
             try:
@@ -248,7 +249,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         report=build_report(ip,results,failed)
         if host:
             report=f"{host} resolves to {ip}\n\n{report}"
-        await c.send_split_messages(interaction,report)
+        await c.send_split_messages(interaction,report,private)
 
     c.run(token)
 
