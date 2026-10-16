@@ -19,7 +19,8 @@ def canonical_ip(text):
 
 def escape_md(text):
     """Escape Discord markdown in text from external sources (banners, hostnames, registry names)."""
-    return re.sub(r"([\\*_~`|])",r"\\\1",str(text))
+    # brackets too: a banner like "[Login](https://...)" would otherwise render as a masked link
+    return re.sub(r"([\\*_~`|\[\]])",r"\\\1",str(text))
 
 _HOSTNAME=re.compile(r"(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
 

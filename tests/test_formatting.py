@@ -136,6 +136,8 @@ class MarkdownEscapeTests(unittest.TestCase):
         self.assertEqual(lines[0],"Organization: \\*\\*Evil\\*\\* Corp")
         self.assertEqual(lines[1],"Hostnames: a\\_b\\_c.example")
         self.assertEqual(lines[2],"Port 80/tcp - Server: \\`x\\` \\~\\~y\\~\\~")
+        link=summarize_shodan({"data":[{"port":80,"data":"[Login](https://example.com)"}]})
+        self.assertEqual(link[0],"Port 80/tcp - \\[Login\\](https://example.com)")
 
 
 class HostnameTests(unittest.TestCase):
