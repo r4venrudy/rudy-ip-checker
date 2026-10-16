@@ -67,7 +67,8 @@ def summarize_virustotal(vt):
     out=[f"VirusTotal: {st.get('malicious',0)} malicious, {st.get('suspicious',0)} suspicious, {st.get('harmless',0)} harmless"]
     for key,label in (("reputation","Reputation"),("as_owner","AS owner"),("asn","ASN"),("country","Country"),("network","Network")):
         if a.get(key) not in (None,""):
-            out.append(f"{label}: {a[key]}")
+            # AS owner names come from registry data and can contain markdown characters
+            out.append(f"{label}: {escape_md(str(a[key]))}")
     if st.get('malicious'):
         # which engines flagged it is more useful than the count alone
         engines=[name for name,r in (a.get("last_analysis_results") or {}).items() if r.get("category")=="malicious"]
@@ -130,7 +131,8 @@ def summarize_rdap(rdap):
         out.append(f"Owner: {escape_md(owner)}")
     abuse=next((_vcard(e,"email") for e in entities if "abuse" in e.get("roles",[]) and _vcard(e,"email")),None)
     if abuse:
-        out.append(f"Abuse contact: {abuse}")
+        # addresses like abuse_team@... would otherwise turn into italics
+        out.append(f"Abuse contact: {escape_md(abuse)}")
     return out
 
 def summarize_abuseipdb(report):

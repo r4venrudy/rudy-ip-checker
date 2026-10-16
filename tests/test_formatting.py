@@ -42,6 +42,12 @@ class FormattingTests(unittest.TestCase):
         out = summarize_virustotal(vt)
         self.assertEqual(out[0], "VirusTotal: 2 malicious, 0 suspicious, 70 harmless")
         self.assertIn("AS owner: Example AS", out)
+
+    def test_virustotal_owner_and_abuse_contact_are_escaped(self):
+        out=summarize_virustotal({"data":{"attributes":{"last_analysis_stats":{},"as_owner":"*Evil_Net*"}}})
+        self.assertIn("AS owner: \\*Evil\\_Net\\*", out)
+        abuse={"roles":["abuse"],"vcardArray":["vcard",[["email",{},"text","abuse_team@example.net"]]]}
+        self.assertIn("Abuse contact: abuse\\_team@example.net", summarize_rdap({"entities":[abuse]}))
         self.assertFalse(any("whois" in line.lower() for line in out))
         self.assertEqual(summarize_virustotal({}), ["VirusTotal: no data"])
 
