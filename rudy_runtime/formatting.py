@@ -88,8 +88,13 @@ def summarize_virustotal(vt):
         engines=[name for name,r in (a.get("last_analysis_results") or {}).items() if r.get("category")=="malicious"]
         if engines:
             out.append("Flagged by: "+", ".join(sorted(engines)[:8])+(f" (+{len(engines)-8} more)" if len(engines)>8 else ""))
-    if isinstance(a.get("last_analysis_date"),int):
-        out.append("Last analysed: "+datetime.fromtimestamp(a["last_analysis_date"],timezone.utc).strftime("%Y-%m-%d"))
+    if type(a.get("last_analysis_date")) is int:
+        try:
+            date=datetime.fromtimestamp(a["last_analysis_date"],timezone.utc).strftime("%Y-%m-%d")
+        except (OverflowError,OSError,ValueError):
+            pass
+        else:
+            out.append("Last analysed: "+date)
     return out
 
 def summarize_shodan(host):
