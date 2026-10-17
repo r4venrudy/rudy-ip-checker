@@ -52,6 +52,8 @@ def clean_banner(banner):
 
 def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
     """Split text on line boundaries into chunks Discord accepts; over-long lines are hard-wrapped."""
+    if type(limit) is not int or not 1<=limit<=DISCORD_MESSAGE_LIMIT:
+        raise ValueError("Message limit must be an integer from 1 to 2000")
     chunks=[]
     cur=""
     for line in m.split("\n"):
