@@ -87,7 +87,7 @@ def summarize_virustotal(vt):
         # which engines flagged it is more useful than the count alone
         engines=[name for name,r in (a.get("last_analysis_results") or {}).items() if r.get("category")=="malicious"]
         if engines:
-            out.append("Flagged by: "+", ".join(sorted(engines)[:8])+(f" (+{len(engines)-8} more)" if len(engines)>8 else ""))
+            out.append("Flagged by: "+", ".join(escape_md(name) for name in sorted(engines)[:8])+(f" (+{len(engines)-8} more)" if len(engines)>8 else ""))
     if type(a.get("last_analysis_date")) is int:
         try:
             date=datetime.fromtimestamp(a["last_analysis_date"],timezone.utc).strftime("%Y-%m-%d")
@@ -114,7 +114,7 @@ def summarize_shodan(host):
     if vulns:
         shown=sorted(vulns)[:5]
         more=f" (+{len(vulns)-5} more)" if len(vulns)>5 else ""
-        out.append(f"Known CVEs: {', '.join(shown)}{more}")
+        out.append(f"Known CVEs: {', '.join(escape_md(v) for v in shown)}{more}")
     for d in sorted(host.get("data",[]),key=lambda d:d.get("port",0)):
         out.append(f"Port {d.get('port')}/{d.get('transport','tcp')} - {escape_md(clean_banner(d.get('data','')))}")
     return out
@@ -173,7 +173,7 @@ def summarize_abuseipdb(report):
     if d.get("lastReportedAt"):
         out.append(f"Last reported: {d['lastReportedAt'][:10]}")
     if d.get("usageType"):
-        out.append(f"Usage type: {d['usageType']}")
+        out.append(f"Usage type: {escape_md(d['usageType'])}")
     if d.get("domain"):
         out.append(f"Domain: {escape_md(d['domain'])}")
     # whitelisted means AbuseIPDB treats it as a known-good service (big DNS resolvers, crawlers)
