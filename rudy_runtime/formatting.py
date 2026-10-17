@@ -116,8 +116,11 @@ def summarize_shodan(host):
 
 def _vcard(entity,field):
     """First value of a vCard field (e.g. "fn", "email") in an RDAP entity's jCard."""
-    for item in (entity.get("vcardArray") or [None,[]])[1]:
-        if item and item[0]==field:
+    card=entity.get("vcardArray")
+    if not isinstance(card,list) or len(card)!=2 or not isinstance(card[1],list):
+        return None
+    for item in card[1]:
+        if isinstance(item,list) and len(item)>=4 and item[0]==field and isinstance(item[3],str):
             return item[3]
     return None
 
