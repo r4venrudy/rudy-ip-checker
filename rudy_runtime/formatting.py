@@ -139,10 +139,17 @@ def summarize_rdap(rdap):
             out.append(f"Registered: {str(e['eventDate'])[:10]}")
         elif e.get("eventAction")=="last changed" and e.get("eventDate"):
             out.append(f"Last changed: {str(e['eventDate'])[:10]}")
-    entities=list(rdap.get("entities",[]))
-    # abuse contacts are usually nested under the registrant entity
-    for e in list(entities):
-        entities.extend(e.get("entities",[]))
+    entities=[]
+    pending=list(reversed(rdap.get("entities") or []))
+    seen=set()
+    # Iterative traversal includes contacts nested more than one level deep.
+    while pending:
+        entity=pending.pop()
+        if not isinstance(entity,dict) or id(entity) in seen:
+            continue
+        seen.add(id(entity))
+        entities.append(entity)
+        pending.extend(reversed(entity.get("entities") or []))
     owner=next((_vcard(e,"fn") for e in entities if "registrant" in e.get("roles",[]) and _vcard(e,"fn")),None)
     if owner:
         out.append(f"Owner: {escape_md(owner)}")
