@@ -2,6 +2,7 @@
 
 import ipaddress
 import re
+from urllib.parse import urlsplit
 from datetime import datetime, timezone
 
 DISCORD_MESSAGE_LIMIT=2000
@@ -22,14 +23,22 @@ def escape_md(text):
     # brackets too: a banner like "[Login](https://...)" would otherwise render as a masked link
     return re.sub(r"([\\*_~`|\[\]])",r"\\\1",str(text))
 
-_HOSTNAME=re.compile(r"(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}")
+_HOSTNAME=re.compile(r"(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9](?:[a-z0-9-]{0,57}[a-z0-9])?)")
 
 def hostname_from(text):
     """"https://Example.com/path" or "example.com." -> "example.com"; None when it is not a hostname."""
-    host=(text or "").strip().lower()
-    if "://" in host:
-        host=host.split("://",1)[1]
-    host=host.split("/",1)[0].split(":",1)[0].rstrip(".")
+    text=(text or "").strip()
+    if any(ord(c)<32 or c.isspace() or c=='\\' for c in text):
+        return None
+    try:
+        url=urlsplit(text if "://" in text else "https://"+text)
+        if url.scheme not in ("http","https") or url.username is not None or url.password is not None:
+            return None
+        if url.port is not None and not 1<=url.port<=65535:
+            return None
+        host=(url.hostname or "").rstrip(".").encode("idna").decode("ascii").lower()
+    except (ValueError,UnicodeError):
+        return None
     return host if _HOSTNAME.fullmatch(host) else None
 
 def clean_banner(banner):
