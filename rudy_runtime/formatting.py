@@ -183,6 +183,8 @@ def summarize_abuseipdb(report):
 
 def summarize_greynoise(report):
     """Whether GreyNoise saw the address mass-scanning (noise) or knows it as a benign service (riot)."""
+    if report.get("riot") is not True and not isinstance(report.get("noise"),bool):
+        return ["GreyNoise: no data"]
     if report.get("riot"):
         return [f"Known benign service: {escape_md(report.get('name') or 'yes')}"]
     if report.get("noise"):
@@ -214,8 +216,8 @@ def build_report(ip,results,failed):
         ("Tor",tor_lines),
         ("WHOIS",lambda r:summarize_rdap(r) if r else ["No registry data"]),
         ("VirusTotal",lambda r:summarize_virustotal(r) if r else ["No data for this address"]),
-        ("AbuseIPDB",lambda r:summarize_abuseipdb(r) if r else []),
-        ("GreyNoise",lambda r:summarize_greynoise(r) if r else []),
+        ("AbuseIPDB",lambda r:summarize_abuseipdb(r or {})),
+        ("GreyNoise",lambda r:summarize_greynoise(r or {})),
     )
     out=[]
     for name,fmt in order:
