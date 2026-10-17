@@ -45,6 +45,8 @@ def hostname_from(text):
 
 def clean_banner(banner):
     """Strip HTML tags and collapse whitespace so a service banner fits on one line (max 100 chars)."""
+    banner=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',banner)
+    banner=re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]','',banner)
     banner=re.sub(r'<[^>]+>','',banner)
     # Shodan banners contain real CR/LF/tab characters; collapse them so each port stays on one line
     banner=re.sub(r'\s+',' ',banner).strip()
