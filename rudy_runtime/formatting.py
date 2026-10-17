@@ -13,6 +13,8 @@ def canonical_ip(text):
         addr=ipaddress.ip_address((text or "").strip())
     except ValueError:
         return None
+    if addr.version==6 and addr.scope_id is not None:
+        return None
     # "::ffff:8.8.8.8" (an IPv4 address written as IPv6, as some logs do) is really 8.8.8.8
     if addr.version==6 and addr.ipv4_mapped:
         addr=addr.ipv4_mapped
