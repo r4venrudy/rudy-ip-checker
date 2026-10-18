@@ -76,10 +76,13 @@ def split_message(m,limit=DISCORD_MESSAGE_LIMIT):
 
 def summarize_virustotal(vt):
     """Short human summary of a VirusTotal v3 IP report: detections, reputation and network owner."""
-    a=vt.get("data",{}).get("attributes",{})
-    if not a:
+    data=vt.get("data") if isinstance(vt,dict) else None
+    a=data.get("attributes") if isinstance(data,dict) else None
+    if not isinstance(a,dict) or not a:
         return ["VirusTotal: no data"]
-    st=a.get("last_analysis_stats",{})
+    st=a.get("last_analysis_stats")
+    if not isinstance(st,dict):
+        st={}
     out=[f"VirusTotal: {st.get('malicious',0)} malicious, {st.get('suspicious',0)} suspicious, {st.get('harmless',0)} harmless"]
     for key,label in (("reputation","Reputation"),("as_owner","AS owner"),("asn","ASN"),("country","Country"),("network","Network")):
         if a.get(key) not in (None,""):
@@ -87,7 +90,8 @@ def summarize_virustotal(vt):
             out.append(f"{label}: {escape_md(str(a[key]))}")
     if st.get('malicious'):
         # which engines flagged it is more useful than the count alone
-        engines=[name for name,r in (a.get("last_analysis_results") or {}).items() if r.get("category")=="malicious"]
+        results=a.get("last_analysis_results")
+        engines=[name for name,r in results.items() if isinstance(name,str) and isinstance(r,dict) and r.get("category")=="malicious"] if isinstance(results,dict) else []
         if engines:
             out.append("Flagged by: "+", ".join(escape_md(name) for name in sorted(engines)[:8])+(f" (+{len(engines)-8} more)" if len(engines)>8 else ""))
     if type(a.get("last_analysis_date")) is int:

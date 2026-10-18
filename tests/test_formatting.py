@@ -159,6 +159,20 @@ class VirusTotalNoDataTests(unittest.TestCase):
         report=build_report("203.0.113.9",{"VirusTotal":None},set())
         self.assertEqual(report,"**VirusTotal**\nNo data for this address")
 
+    def test_malformed_optional_response_shapes_do_not_abort_formatting(self):
+        from rudy_runtime.formatting import summarize_virustotal
+        self.assertEqual(summarize_virustotal({"data":None}),["VirusTotal: no data"])
+        out=summarize_virustotal({"data":{"attributes":{
+            "last_analysis_stats":None,
+            "last_analysis_results":{"broken":None,"BitDefender":{"category":"malicious"}}
+        }}})
+        self.assertEqual(out,["VirusTotal: 0 malicious, 0 suspicious, 0 harmless"])
+        flagged=summarize_virustotal({"data":{"attributes":{
+            "last_analysis_stats":{"malicious":1},
+            "last_analysis_results":{"broken":None,"BitDefender":{"category":"malicious"}}
+        }}})
+        self.assertEqual(flagged[1],"Flagged by: BitDefender")
+
 
 class ShodanTagsTests(unittest.TestCase):
     def test_tags_and_last_scan(self):
