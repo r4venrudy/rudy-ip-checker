@@ -105,20 +105,32 @@ def summarize_shodan(host):
     for key,label in (("org","Organization"),("isp","ISP"),("os","OS")):
         if host.get(key):
             out.append(f"{label}: {escape_md(host[key])}")
-    if host.get("tags"):
+    tags = host.get("tags")
+    if isinstance(tags, list) and tags:
         # Shodan's own labels: vpn, tor, cloud, honeypot, self-signed, compromised...
-        out.append("Tags: "+", ".join(escape_md(t) for t in host["tags"][:8]))
+        out.append("Tags: "+", ".join(escape_md(t) for t in tags[:8]))
     if host.get("last_update"):
         out.append(f"Last scanned by Shodan: {str(host['last_update'])[:10]}")
-    if host.get("hostnames"):
-        out.append("Hostnames: "+", ".join(escape_md(h) for h in host["hostnames"][:5]))
+    hostnames = host.get("hostnames")
+    if isinstance(hostnames, list) and hostnames:
+        out.append("Hostnames: "+", ".join(escape_md(h) for h in hostnames[:5]))
     vulns=host.get("vulns") or []
+    if isinstance(vulns, dict):
+        vulns = list(vulns)
+    elif not isinstance(vulns, (list, tuple, set)):
+        vulns = []
+    vulns = [v for v in vulns if isinstance(v, str)]
     if vulns:
         shown=sorted(vulns)[:5]
         more=f" (+{len(vulns)-5} more)" if len(vulns)>5 else ""
         out.append(f"Known CVEs: {', '.join(escape_md(v) for v in shown)}{more}")
-    for d in sorted(host.get("data",[]),key=lambda d:d.get("port",0)):
-        out.append(f"Port {d.get('port')}/{d.get('transport','tcp')} - {escape_md(clean_banner(d.get('data','')))}")
+    records = host.get("data")
+    if isinstance(records, list):
+        ports = [d for d in records if isinstance(d, dict) and type(d.get("port")) is int and 0 <= d["port"] <= 65535]
+        for d in sorted(ports, key=lambda item: item["port"]):
+            transport = d.get("transport")
+            banner = d.get("data")
+            out.append(f"Port {d['port']}/{escape_md(transport if isinstance(transport, str) else 'tcp')} - {escape_md(clean_banner(banner if isinstance(banner, str) else ''))}")
     return out
 
 def _vcard(entity,field):

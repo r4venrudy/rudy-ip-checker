@@ -74,6 +74,11 @@ class ShodanSummaryTests(unittest.TestCase):
     def test_empty_report(self):
         self.assertEqual(summarize_shodan({}), [])
 
+    def test_null_and_malformed_optional_fields_do_not_abort_the_report(self):
+        self.assertEqual(summarize_shodan({"tags": None, "hostnames": None, "vulns": None, "data": None}), [])
+        self.assertEqual(summarize_shodan({"data": [None, {"port": "443"}, {"port": 53, "transport": None, "data": None}]}),
+                         ["Port 53/tcp - "])
+
 
 RDAP_SAMPLE = {
     "handle": "NET-8-8-8-0-2", "name": "GOGL", "startAddress": "8.8.8.0", "endAddress": "8.8.8.255", "country": "US",
