@@ -39,6 +39,7 @@ from rudy_runtime.config import load_config as load_runtime_config
 from rudy_runtime.cooldown import Cooldown, seconds_from_env
 from rudy_runtime.formatting import build_report, canonical_ip, hostname_from, split_message
 from rudy_runtime.privacy import private_by_default
+from rudy_runtime.rate_limit import SlidingWindowRateLimiter
 
 # VirusTotal's free tier allows 4 requests a minute, so space out each user's lookups
 cooldown=Cooldown(seconds_from_env(os.environ.get("COOLDOWN_SECONDS"),15))
@@ -58,6 +59,7 @@ class AClient(discord.Client):
         self.tor_lock=asyncio.Lock()
         self.tree=discord.app_commands.CommandTree(self)
         self.rate_limiter=asyncio.Semaphore(RATE_LIMIT)
+        self.virustotal_rate_limiter=SlidingWindowRateLimiter(4,60)
 
     async def setup_hook(self):
         # aiohttp sessions must be created inside the running event loop
@@ -118,6 +120,8 @@ class AClient(discord.Client):
     async def get_virustotal_data(self,ip):
         h={'x-apikey':self.virustotal_key}
         u=f"https://www.virustotal.com/api/v3/ip_addresses/{ip}"
+        # The public API quota is shared across users; a per-user cooldown cannot enforce it.
+        await self.virustotal_rate_limiter.acquire()
         async with self.session.get(u,headers=h) as r:
             if r.status in (401,403):
                 raise RuntimeError("VirusTotal rejected the API key")

@@ -87,7 +87,7 @@ AS owner: GOOGLE
 Country: US
 ```
 
-Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `Lookup failed` under its own heading while the others still answer. Up to 5 lookups run at once, and each user waits `COOLDOWN_SECONDS` (default 15) between lookups so the API quotas last.
+Private and reserved addresses (10.x, 192.168.x, loopback) are refused, and a source that fails shows `Lookup failed` under its own heading while the others still answer. Up to 5 lookups run at once. VirusTotal requests are limited to 4 per rolling minute across this bot process, matching its public API quota; each user also waits `COOLDOWN_SECONDS` (default 15) between lookups. Other deployments using the same API key still share that provider quota.
 
 ## Project map
 
