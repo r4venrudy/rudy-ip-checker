@@ -38,6 +38,7 @@ logging.basicConfig(
 from rudy_runtime.config import load_config as load_runtime_config
 from rudy_runtime.cooldown import Cooldown, seconds_from_env
 from rudy_runtime.formatting import build_report, canonical_ip, hostname_from, split_message
+from rudy_runtime.privacy import private_by_default
 
 # VirusTotal's free tier allows 4 requests a minute, so space out each user's lookups
 cooldown=Cooldown(seconds_from_env(os.environ.get("COOLDOWN_SECONDS"),15))
@@ -195,8 +196,8 @@ def run_discord_bot(token,shodan_key,virustotal_key):
 
     @c.tree.command(name="ip",description="Retrieve comprehensive information about an IP address.")
     @discord.app_commands.describe(ip="IPv4 or IPv6 address or a hostname, e.g. 8.8.8.8 or example.com",
-                                   private="Show the report only to you (default: everyone in the channel)")
-    async def ip(interaction:discord.Interaction,ip:str,private:bool=False):
+                                   private="Keep the report visible only to you (default); false posts in the channel")
+    async def ip(interaction:discord.Interaction,ip:str,private:bool|None=None):
         # canonical form, so "2001:DB8::0001" and " 8.8.8.8 " match the Tor list and APIs
         given=ip
         ip=canonical_ip(given)
@@ -219,6 +220,7 @@ def run_discord_bot(token,shodan_key,virustotal_key):
         if wait:
             await interaction.response.send_message(f"Please wait {int(wait)+1} seconds before the next lookup.",ephemeral=True)
             return
+        private=private_by_default(private)
         await interaction.response.defer(ephemeral=private)
         async with c.rate_limiter:
             await run_lookup(interaction,ip,host,private)
