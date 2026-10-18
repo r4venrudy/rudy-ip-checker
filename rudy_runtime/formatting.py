@@ -153,13 +153,17 @@ def summarize_rdap(rdap):
     if rdap.get("country"):
         out.append(f"Registered country: {rdap['country']}")
     # when the block was allocated and last changed; a fresh allocation is common for throwaway hosting
-    for e in rdap.get("events") or []:
+    events=rdap.get("events")
+    for e in events if isinstance(events,list) else []:
+        if not isinstance(e,dict):
+            continue
         if e.get("eventAction")=="registration" and e.get("eventDate"):
             out.append(f"Registered: {str(e['eventDate'])[:10]}")
         elif e.get("eventAction")=="last changed" and e.get("eventDate"):
             out.append(f"Last changed: {str(e['eventDate'])[:10]}")
     entities=[]
-    pending=list(reversed(rdap.get("entities") or []))
+    roots=rdap.get("entities")
+    pending=list(reversed(roots)) if isinstance(roots,list) else []
     seen=set()
     # Iterative traversal includes contacts nested more than one level deep.
     while pending:
@@ -168,11 +172,16 @@ def summarize_rdap(rdap):
             continue
         seen.add(id(entity))
         entities.append(entity)
-        pending.extend(reversed(entity.get("entities") or []))
-    owner=next((_vcard(e,"fn") for e in entities if "registrant" in e.get("roles",[]) and _vcard(e,"fn")),None)
+        children=entity.get("entities")
+        if isinstance(children,list):
+            pending.extend(reversed(children))
+    def has_role(entity,role):
+        roles=entity.get("roles")
+        return isinstance(roles,list) and role in roles
+    owner=next((_vcard(e,"fn") for e in entities if has_role(e,"registrant") and _vcard(e,"fn")),None)
     if owner:
         out.append(f"Owner: {escape_md(owner)}")
-    abuse=next((_vcard(e,"email") for e in entities if "abuse" in e.get("roles",[]) and _vcard(e,"email")),None)
+    abuse=next((_vcard(e,"email") for e in entities if has_role(e,"abuse") and _vcard(e,"email")),None)
     if abuse:
         # addresses like abuse_team@... would otherwise turn into italics
         out.append(f"Abuse contact: {escape_md(abuse)}")
