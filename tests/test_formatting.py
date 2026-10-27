@@ -122,6 +122,25 @@ class AbuseIpdbSummaryTests(unittest.TestCase):
 
 
 class BuildReportTests(unittest.TestCase):
+    def test_malformed_abuseipdb_does_not_discard_other_sources(self):
+        for response in ([1], "unavailable", {"data": [1]}, {"data": "unavailable"}):
+            with self.subTest(response=response):
+                report = build_report("2001:db8::1", {
+                    "Tor": None,
+                    "Shodan": {"org": "Example ISP"},
+                    "AbuseIPDB": response,
+                }, set())
+                self.assertIn("Organization: Example ISP", report)
+                self.assertIn("AbuseIPDB: no data", report)
+                self.assertIn("Not checked", report)
+
+    def test_non_string_abuse_timestamp_does_not_crash_report(self):
+        report = build_report("203.0.113.1", {
+            "AbuseIPDB": {"data": {"abuseConfidenceScore": 20, "lastReportedAt": 123}},
+        }, set())
+        self.assertIn("20% abuse confidence", report)
+        self.assertNotIn("Last reported:", report)
+
     def test_sections_in_fixed_order_with_failures_in_place(self):
         results = {"Tor": {"1.2.3.4"}, "Shodan": None, "WHOIS": RDAP_SAMPLE}
         report = build_report("1.2.3.4", results, {"VirusTotal"})

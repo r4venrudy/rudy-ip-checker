@@ -191,13 +191,17 @@ def summarize_rdap(rdap):
         out.append(f"Abuse contact: {escape_md(abuse)}")
     return out
 
+def _abuseipdb_data(report):
+    data=report.get("data") if isinstance(report,dict) else None
+    return data if isinstance(data,dict) else {}
+
 def summarize_abuseipdb(report):
     """Abuse confidence, report count and usage type from an AbuseIPDB v2 /check response."""
-    d=report.get("data") or {}
+    d=_abuseipdb_data(report)
     if "abuseConfidenceScore" not in d:
         return ["AbuseIPDB: no data"]
     out=[f"AbuseIPDB: {d['abuseConfidenceScore']}% abuse confidence, {d.get('totalReports',0)} reports in 90 days"]
-    if d.get("lastReportedAt"):
+    if isinstance(d.get("lastReportedAt"),str) and d["lastReportedAt"]:
         out.append(f"Last reported: {d['lastReportedAt'][:10]}")
     if d.get("usageType"):
         out.append(f"Usage type: {escape_md(d['usageType'])}")
@@ -231,7 +235,7 @@ def build_report(ip,results,failed):
     """
     tor_ipv6=ipaddress.ip_address(ip).version==6
     # the exit list is IPv4 only, but AbuseIPDB (when configured) knows IPv6 exits too
-    abuse_tor=((results.get("AbuseIPDB") or {}).get("data") or {}).get("isTor")
+    abuse_tor=_abuseipdb_data(results.get("AbuseIPDB")).get("isTor")
     def tor_lines(r):
         if tor_ipv6:
             if isinstance(abuse_tor,bool):
