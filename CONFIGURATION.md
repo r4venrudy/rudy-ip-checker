@@ -13,3 +13,7 @@ After trimming surrounding whitespace, embedded C0 control characters and DEL ar
 ## Unicode integrity
 
 Required setting values reject unpaired UTF-16 surrogate code points. Valid Unicode, including supplementary characters, is retained unchanged; the loader does not silently replace malformed credential text.
+
+## Unambiguous JSON
+
+Object keys must be unique at every nesting level, including escaped spellings of the same key. Non-JSON NaN/Infinity constants are rejected. Separate objects may still reuse ordinary key names. These errors do not print key values or modify the file.

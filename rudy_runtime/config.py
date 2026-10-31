@@ -2,12 +2,23 @@ import json
 import os
 from pathlib import Path
 
+def _unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('Configuration must not contain duplicate object keys')
+        result[key] = value
+    return result
+
+def _reject_constant(_value):
+    raise ValueError('Configuration must not contain NaN or Infinity')
+
 def _read_config_file(filename):
     with filename.open('rb') as stream:
         raw = stream.read(65537)
     if len(raw) > 65536:
         raise ValueError('Configuration file exceeds 64 KiB')
-    return json.loads(raw.decode('utf-8-sig'))
+    return json.loads(raw.decode('utf-8-sig'), object_pairs_hook=_unique_object, parse_constant=_reject_constant)
 
 def load_config(spec, env=None, filename=None):
     env = os.environ if env is None else env
