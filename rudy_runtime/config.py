@@ -11,7 +11,10 @@ def _read_config_file(filename):
 
 def load_config(spec, env=None, filename=None):
     env = os.environ if env is None else env
+    selected = filename is None and bool(env.get('RUDY_CONFIG'))
     filename = Path(filename or env.get('RUDY_CONFIG', 'config.json'))
+    if selected and not filename.is_file():
+        raise ValueError('RUDY_CONFIG must identify an existing regular file')
     data = _read_config_file(filename) if filename.is_file() else {}
     if not isinstance(data, dict):
         raise ValueError('Configuration must be a JSON object')

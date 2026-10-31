@@ -132,3 +132,5 @@ Only public project files are packaged. Image tags are `latest` and `sha-<full c
 <p align="center">Part of the <a href="https://github.com/r4venrudy">r4venrudy</a> project collection.</p>
 
 Local configuration files must be UTF-8 JSON objects no larger than 64 KiB. The byte limit is enforced during reading, including BOM-prefixed files.
+
+See the [configuration reference](CONFIGURATION.md) for selection and validation rules.
