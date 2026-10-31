@@ -9,3 +9,7 @@ A nonempty `RUDY_CONFIG` selects an existing regular JSON file. Missing or non-f
 ## Credential text
 
 After trimming surrounding whitespace, embedded C0 control characters and DEL are rejected in required settings before client initialization. Diagnostics identify setting names without echoing credential values.
+
+## Unicode integrity
+
+Required setting values reject unpaired UTF-16 surrogate code points. Valid Unicode, including supplementary characters, is retained unchanged; the loader does not silently replace malformed credential text.

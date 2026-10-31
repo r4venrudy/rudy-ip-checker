@@ -23,6 +23,9 @@ def load_config(spec, env=None, filename=None):
     controls = [spec[key] for key, value in config.items() if isinstance(value, str) and any(ord(char) < 32 or ord(char) == 127 for char in value)]
     if controls:
         raise ValueError('Invalid control characters in configuration: ' + ', '.join(controls))
+    malformed = [spec[key] for key, value in config.items() if isinstance(value, str) and any(0xD800 <= ord(char) <= 0xDFFF for char in value)]
+    if malformed:
+        raise ValueError('Invalid Unicode in configuration: ' + ', '.join(malformed))
     missing = [spec[key] for key, value in config.items() if not isinstance(value, str) or not value.strip() or value.startswith('YOUR_')]
     if missing:
         raise ValueError('Missing configuration: ' + ', '.join(missing))
