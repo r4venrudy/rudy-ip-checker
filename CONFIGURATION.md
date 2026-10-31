@@ -17,3 +17,7 @@ Required setting values reject unpaired UTF-16 surrogate code points. Valid Unic
 ## Unambiguous JSON
 
 Object keys must be unique at every nesting level, including escaped spellings of the same key. Non-JSON NaN/Infinity constants are rejected. Separate objects may still reuse ordinary key names. These errors do not print key values or modify the file.
+
+## Nesting budget
+
+JSON containers are limited to 64 levels, counting the root object. Brackets and escaped quotes inside strings do not consume depth. Over-budget documents raise a configuration ValueError before JSON decoding. The 64 KiB byte cap remains independent.
