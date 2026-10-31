@@ -62,7 +62,7 @@ def load_config(spec, env=None, filename=None):
     malformed = [spec[key] for key, value in config.items() if isinstance(value, str) and any(0xD800 <= ord(char) <= 0xDFFF for char in value)]
     if malformed:
         raise ValueError('Invalid Unicode in configuration: ' + ', '.join(malformed))
-    missing = [spec[key] for key, value in config.items() if not isinstance(value, str) or not value.strip() or value.startswith('YOUR_')]
+    missing = [spec[key] for key, value in config.items() if not isinstance(value, str) or not value.strip() or value.upper().startswith(('YOUR_', 'DISCORD TOKEN', 'YOUR CLIENT'))]
     if missing:
         raise ValueError('Missing configuration: ' + ', '.join(missing))
     return config

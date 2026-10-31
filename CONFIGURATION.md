@@ -21,3 +21,7 @@ Object keys must be unique at every nesting level, including escaped spellings o
 ## Nesting budget
 
 JSON containers are limited to 64 levels, counting the root object. Brackets and escaped quotes inside strings do not consume depth. Over-budget documents raise a configuration ValueError before JSON decoding. The 64 KiB byte cap remains independent.
+
+## Placeholder labels
+
+Example labels beginning with YOUR_, DISCORD TOKEN or YOUR CLIENT are rejected case-insensitively. Missing-setting diagnostics identify the environment variable without echoing its value. A non-placeholder value still needs valid credentials supplied by its owner.
