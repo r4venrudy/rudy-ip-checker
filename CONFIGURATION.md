@@ -5,3 +5,7 @@ Environment values take priority over local file values. Configuration files are
 ## Explicit file selection
 
 A nonempty `RUDY_CONFIG` selects an existing regular JSON file. Missing or non-file selections are errors even when environment credentials are complete. A programmatic filename override takes precedence. The optional default file may be absent when environment settings supply the required values.
+
+## Credential text
+
+After trimming surrounding whitespace, embedded C0 control characters and DEL are rejected in required settings before client initialization. Diagnostics identify setting names without echoing credential values.

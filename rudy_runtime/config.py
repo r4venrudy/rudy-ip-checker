@@ -20,6 +20,9 @@ def load_config(spec, env=None, filename=None):
         raise ValueError('Configuration must be a JSON object')
     config = {key: env.get(variable) or data.get(key, '') for key, variable in spec.items()}
     config = {key: value.strip() if isinstance(value, str) else value for key, value in config.items()}
+    controls = [spec[key] for key, value in config.items() if isinstance(value, str) and any(ord(char) < 32 or ord(char) == 127 for char in value)]
+    if controls:
+        raise ValueError('Invalid control characters in configuration: ' + ', '.join(controls))
     missing = [spec[key] for key, value in config.items() if not isinstance(value, str) or not value.strip() or value.startswith('YOUR_')]
     if missing:
         raise ValueError('Missing configuration: ' + ', '.join(missing))
